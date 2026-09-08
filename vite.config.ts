@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  base: '/mrp/', // GitHub Pages: aliahmed323.github.io/mrp/
   plugins: [
     react(),
     VitePWA({

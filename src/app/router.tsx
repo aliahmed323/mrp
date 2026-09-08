@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createHashRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/common/AppShell';
 import { DashboardPage } from '@/modules/dashboard/DashboardPage';
 import { ProductListPage } from '@/modules/products/pages/ProductListPage';
@@ -8,12 +8,10 @@ import { EditProductPage } from '@/modules/products/pages/EditProductPage';
 
 // ============================================================
 // Application Router
-// All routes are wrapped inside AppShell for layout consistency.
-// To add future modules (Doctors, Pharmacies, etc.),
-// simply add new routes here without modifying the shell.
+// Uses HashRouter for 100% compatibility with GitHub Pages static hosting
 // ============================================================
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <AppShell />,
@@ -32,3 +30,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
