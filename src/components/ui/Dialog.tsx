@@ -51,8 +51,9 @@ export function Dialog({ open, onClose, title, children, className, size = 'md' 
 
       {/* Panel */}
       <div className={cn(
-        'relative w-full bg-white shadow-2xl flex flex-col',
+        'relative bg-white shadow-2xl flex flex-col',
         'rounded-t-2xl sm:rounded-2xl overflow-hidden',
+        'w-[calc(100%-2rem)] mx-auto sm:w-full',
         'max-h-[95dvh] sm:max-h-[90vh]',
         sizes[size],
         className

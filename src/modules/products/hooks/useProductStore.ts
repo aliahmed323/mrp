@@ -8,6 +8,7 @@ import {
   unarchiveProduct,
   deleteProduct,
   getProductStats,
+  bulkCreateProducts,
 } from '@/services/storage/productRepository';
 import type { ProductFormData } from '@/modules/products/models/product.model';
 
@@ -52,6 +53,7 @@ interface ProductState {
   // Actions
   loadProducts: () => Promise<void>;
   addProduct: (data: ProductFormData) => Promise<Product>;
+  bulkAddProducts: (dataList: ProductFormData[]) => Promise<void>;
   editProduct: (id: string, data: Partial<ProductFormData>) => Promise<Product>;
   archiveProduct: (id: string) => Promise<void>;
   unarchiveProduct: (id: string) => Promise<void>;
@@ -115,6 +117,12 @@ export const useProductStore = create<ProductState>((set, get) => ({
     const [all, stats] = await Promise.all([getAllProducts(), getProductStats()]);
     set({ products: all, stats });
     return product;
+  },
+
+  bulkAddProducts: async (dataList) => {
+    await bulkCreateProducts(dataList);
+    const [all, stats] = await Promise.all([getAllProducts(), getProductStats()]);
+    set({ products: all, stats });
   },
 
   editProduct: async (id, data) => {

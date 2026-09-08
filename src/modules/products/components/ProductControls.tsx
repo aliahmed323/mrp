@@ -66,7 +66,7 @@ export function ProductFilters() {
   const visible = showMore ? filterOptions : filterOptions.slice(0, 4);
 
   return (
-    <div className="flex flex-wrap gap-1.5 items-center">
+    <div className="flex overflow-x-auto gap-2 items-center pb-2 -mb-2 snap-x hide-scrollbar">
       {visible.map(opt => (
         <button
           key={`${opt.key}-${String(opt.value)}`}

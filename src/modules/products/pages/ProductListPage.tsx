@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Archive } from 'lucide-react';
 import { useProductStore } from '../hooks/useProductStore';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSearch, ProductFilters, ProductSort } from '../components/ProductControls';
+import { BulkImportModal } from '../components/BulkImportModal';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/States';
 
@@ -13,6 +14,7 @@ export function ProductListPage() {
     loading, error, searchQuery, filters, showArchived,
     setShowArchived, loadProducts, getFilteredProducts,
   } = useProductStore();
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   useEffect(() => { loadProducts(); }, [loadProducts]);
 
@@ -37,9 +39,14 @@ export function ProductListPage() {
           <h2 className="text-lg font-bold text-slate-900">المنتجات</h2>
           <p className="text-xs text-slate-500">{products.length} منتج</p>
         </div>
-        <Button onClick={() => navigate('/products/new')} size="sm">
-          <Plus size={16} /> إضافة منتج
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowBulkImport(true)} size="sm" variant="secondary" className="hidden sm:flex">
+            استيراد بالجملة
+          </Button>
+          <Button onClick={() => navigate('/products/new')} size="sm">
+            <Plus size={16} /> إضافة منتج
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -79,6 +86,9 @@ export function ProductListPage() {
           ))}
         </div>
       )}
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal open={showBulkImport} onClose={() => setShowBulkImport(false)} />
     </div>
   );
 }

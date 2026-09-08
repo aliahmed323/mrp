@@ -44,6 +44,18 @@ export async function createProduct(data: ProductFormData): Promise<Product> {
   return product;
 }
 
+/** Bulk create products */
+export async function bulkCreateProducts(dataList: ProductFormData[]): Promise<void> {
+  const products: Product[] = dataList.map(data => ({
+    ...data,
+    id: generateId(),
+    archived: false,
+    createdAt: now(),
+    updatedAt: now(),
+  }));
+  await db.products.bulkAdd(products);
+}
+
 /** Update an existing product */
 export async function updateProduct(id: string, data: Partial<ProductFormData>): Promise<Product> {
   const existing = await db.products.get(id);

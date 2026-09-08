@@ -16,9 +16,10 @@ export default defineConfig({
         description: 'أداة المندوب الطبي الميدانية - المرجع الثاني',
         theme_color: '#0F52BA',
         background_color: '#F8FAFC',
+        id: '/mrp/',
         display: 'standalone',
         orientation: 'portrait-primary',
-        start_url: '/',
+        start_url: '.',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },

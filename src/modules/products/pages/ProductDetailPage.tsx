@@ -87,7 +87,7 @@ export function ProductDetailPage() {
               <p className="text-sm text-slate-500 mt-0.5">{product.genericName}</p>
               <div className="flex flex-wrap gap-1.5 mt-2">
                 <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-2 py-0.5 font-medium">{product.strength}</span>
-                <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-2 py-0.5">{product.packSize}</span>
+                <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-2 py-0.5">{product.stripsPerBox} أشرطة</span>
                 <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-2 py-0.5">{DOSAGE_FORM_LABELS[product.dosageForm] || product.dosageForm}</span>
               </div>
               <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
@@ -116,7 +116,7 @@ export function ProductDetailPage() {
             {[
               { label: 'سعر الشريط', value: product.stripPrice, color: 'text-slate-900' },
               { label: 'صافي السعر', value: product.netPrice, color: 'text-[#0F52BA]' },
-              { label: 'سعر البيع', value: product.sellingPrice, color: 'text-slate-700' },
+              { label: 'سعر الباكيت', value: product.boxPrice, color: 'text-slate-700' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-slate-50 rounded-xl p-3 text-center">
                 <div className="text-[10px] text-slate-500 mb-1">{label}</div>

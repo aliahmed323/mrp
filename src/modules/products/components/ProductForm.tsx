@@ -22,13 +22,12 @@ const schema = z.object({
   category: z.string().min(1, 'الفئة مطلوبة'),
   strength: z.string().min(1, 'التركيز مطلوب'),
   dosageForm: z.string().min(1, 'الشكل الصيدلاني مطلوب'),
-  packSize: z.string().min(1, 'حجم العبوة مطلوب'),
-  numberOfUnits: z.coerce.number().int().min(1, 'يجب أن يكون أكبر من 0'),
+  boxPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
+  stripsPerBox: z.coerce.number().int().min(1, 'يجب أن يكون أكبر من 0'),
   stripPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
   netPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
-  sellingPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
   bonus: z.string().default(''),
-  bonusType: z.string().default('none'),
+  bonusType: z.string().default('percentage'),
   bonusPoints: z.coerce.number().min(0, 'يجب أن يكون غير سالب').default(0),
   expiryDate: z.string().min(1, 'تاريخ الصلاحية مطلوب'),
   protected: z.boolean().default(false),
@@ -107,13 +106,12 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
     category: initialData?.category ?? '',
     strength: initialData?.strength ?? '',
     dosageForm: initialData?.dosageForm ?? 'tablet',
-    packSize: initialData?.packSize ?? '',
-    numberOfUnits: initialData?.numberOfUnits ?? 1,
+    boxPrice: initialData?.boxPrice ?? 0,
+    stripsPerBox: initialData?.stripsPerBox ?? 1,
     stripPrice: initialData?.stripPrice ?? 0,
     netPrice: initialData?.netPrice ?? 0,
-    sellingPrice: initialData?.sellingPrice ?? 0,
     bonus: initialData?.bonus ?? '',
-    bonusType: initialData?.bonusType ?? 'none',
+    bonusType: initialData?.bonusType ?? 'percentage',
     bonusPoints: initialData?.bonusPoints ?? 0,
     expiryDate: initialData?.expiryDate ?? '',
     protected: initialData?.protected ?? false,
@@ -174,15 +172,14 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
         <Controller name="dosageForm" control={control} render={({ field }) => (
           <Select label="الشكل الصيدلاني" required options={dosageFormOptions} {...field} error={errors.dosageForm?.message} />
         )} />
-        <Input label="حجم العبوة" required placeholder="2 × 12" {...register('packSize')} error={errors.packSize?.message} />
-        <Input label="عدد الوحدات" required type="number" min="1" {...register('numberOfUnits')} error={errors.numberOfUnits?.message} />
+        <Input label="سعر الباكيت كاملاً" required type="number" step="0.01" min="0" placeholder="0.00" {...register('boxPrice')} error={errors.boxPrice?.message} />
+        <Input label="كم شريط في الباكيت" required type="number" min="1" placeholder="مثال: 2" {...register('stripsPerBox')} error={errors.stripsPerBox?.message} />
       </Section>
 
       {/* 2. Pricing */}
       <Section title="💰 الأسعار">
         <Input label="سعر الشريط" required type="number" step="0.01" min="0" placeholder="0.00" {...register('stripPrice')} error={errors.stripPrice?.message} />
-        <Input label="صافي السعر (Net)" required type="number" step="0.01" min="0" placeholder="0.00" {...register('netPrice')} error={errors.netPrice?.message} />
-        <Input label="سعر البيع" type="number" step="0.01" min="0" placeholder="0.00" {...register('sellingPrice')} error={errors.sellingPrice?.message} />
+        <Input label="صافي السعر للمجموع (Net Price)" required type="number" step="0.01" min="0" placeholder="0.00" {...register('netPrice')} error={errors.netPrice?.message} />
       </Section>
 
       {/* 3. Bonus */}

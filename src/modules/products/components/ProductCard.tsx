@@ -93,7 +93,7 @@ export function ProductCard({ product }: ProductCardProps) {
                   {product.strength}
                 </span>
                 <span className="text-xs text-slate-400">|</span>
-                <span className="text-xs text-slate-600">{product.packSize}</span>
+                <span className="text-xs text-slate-600">{product.stripsPerBox} أشرطة</span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 truncate">{product.company}</p>
             </div>

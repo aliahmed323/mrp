@@ -19,11 +19,10 @@ export interface Product {
   category: string;
   strength: string;
   dosageForm: DosageForm | string;
-  packSize: string;
-  numberOfUnits: number;
+  boxPrice: number;
+  stripsPerBox: number;
   stripPrice: number;
   netPrice: number;
-  sellingPrice: number;
   bonus: string;
   bonusType: BonusType;
   bonusPoints: number;
@@ -45,7 +44,7 @@ export type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | '
 export type ProductSummary = Pick<
   Product,
   | 'id' | 'productName' | 'genericName' | 'company' | 'image'
-  | 'strength' | 'packSize' | 'stripPrice' | 'netPrice'
+  | 'strength' | 'boxPrice' | 'stripsPerBox' | 'stripPrice' | 'netPrice'
   | 'bonus' | 'bonusPoints' | 'expiryDate' | 'protected' | 'burning'
   | 'active' | 'archived' | 'category'
 >;
