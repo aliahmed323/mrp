@@ -8,7 +8,6 @@ import { DOSAGE_FORM_LABELS, BONUS_TYPE_LABELS } from '../models/product.model';
 import { Input, Textarea, Select, Toggle } from '@/components/ui/FormControls';
 import { Button } from '@/components/ui/Button';
 import { ProductImageUpload } from './ProductImageUpload';
-import { cn } from '@/utils/cn';
 
 // ============================================================
 // Validation Schema

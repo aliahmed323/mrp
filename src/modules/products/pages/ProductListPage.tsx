@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Package, Archive } from 'lucide-react';
+import { Plus, Archive } from 'lucide-react';
 import { useProductStore } from '../hooks/useProductStore';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSearch, ProductFilters, ProductSort } from '../components/ProductControls';

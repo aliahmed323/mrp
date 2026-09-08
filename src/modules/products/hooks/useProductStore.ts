@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { Product } from '@/modules/products/models/product.model';
 import {
-  getActiveProducts,
   getAllProducts,
   createProduct,
   updateProduct,

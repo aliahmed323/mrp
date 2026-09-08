@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, Archive, Trash2, Package, RotateCcw,
-  ShieldCheck, ShieldOff, Flame, Star, Calendar, Building2, Pill,
+  Star, Calendar, Building2,
 } from 'lucide-react';
 import { getProductById } from '@/services/storage/productRepository';
 import { useProductStore } from '../hooks/useProductStore';

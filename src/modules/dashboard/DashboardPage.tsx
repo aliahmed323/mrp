@@ -9,7 +9,7 @@ import { LoadingState } from '@/components/ui/States';
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { loading, stats, products, loadProducts, getFilteredProducts } = useProductStore();
+  const { loading, stats, products, loadProducts } = useProductStore();
 
   useEffect(() => { loadProducts(); }, [loadProducts]);
 

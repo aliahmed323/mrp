@@ -1,7 +1,6 @@
-import { Search, X, SlidersHorizontal, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { Search, X, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useProductStore, type ProductFilters, type SortField } from '../hooks/useProductStore';
-import { Button } from '@/components/ui/Button';
 import { cn } from '@/utils/cn';
 
 // ============================================================
