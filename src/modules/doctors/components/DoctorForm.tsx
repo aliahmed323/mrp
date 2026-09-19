@@ -3,8 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { Doctor, DoctorFormData, DoctorType } from '../models/doctor.model';
-import { DOCTOR_TYPE_LABELS, SPECIALTY_OPTIONS } from '../models/doctor.model';
+import type { Doctor, DoctorFormData } from '../models/doctor.model';
+import { SPECIALTY_OPTIONS } from '../models/doctor.model';
 import { Input, Textarea, Select } from '@/components/ui/FormControls';
 import { Button } from '@/components/ui/Button';
 import { LocationPicker } from './LocationPicker';
@@ -15,13 +15,10 @@ import { LocationPicker } from './LocationPicker';
 
 const schema = z.object({
   name: z.string().min(2, 'الاسم مطلوب (حرفان على الأقل)'),
-  type: z.string().min(1, 'النوع مطلوب'),
   specialty: z.string().default(''),
+  area: z.string().default(''),
   phone: z.string().default(''),
-  address: z.string().default(''),
   notes: z.string().default(''),
-  latitude: z.coerce.number().optional(),
-  longitude: z.coerce.number().optional(),
   active: z.boolean().default(true),
 });
 
@@ -56,11 +53,6 @@ const FullWidth = ({ children }: { children: React.ReactNode }) => (
   <div className="sm:col-span-2">{children}</div>
 );
 
-// ============================================================
-// Options
-// ============================================================
-
-const typeOptions = Object.entries(DOCTOR_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
 const specialtyOptions = SPECIALTY_OPTIONS.map(s => ({ value: s, label: s }));
 
 // ============================================================
@@ -82,10 +74,9 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
 
   const defaultValues: FormValues = {
     name: initialData?.name ?? '',
-    type: initialData?.type ?? 'doctor',
     specialty: initialData?.specialty ?? '',
+    area: initialData?.area ?? '',
     phone: initialData?.phone ?? '',
-    address: initialData?.address ?? '',
     notes: initialData?.notes ?? '',
     active: initialData?.active ?? true,
   };
@@ -99,10 +90,9 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
     try {
       const data: DoctorFormData = {
         name: values.name,
-        type: values.type as DoctorType,
         specialty: values.specialty ?? '',
+        area: values.area ?? '',
         phone: values.phone ?? '',
-        address: values.address ?? '',
         notes: values.notes ?? '',
         location: locationValue,
         active: values.active,
@@ -118,22 +108,19 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
       {/* 1. Basic Info */}
       <Section title="📋 المعلومات الأساسية">
         <FullWidth>
-          <Input label="الاسم" required placeholder="د. أحمد محمد / صيدلية النور" {...register('name')} error={errors.name?.message} />
+          <Input label="اسم الطبيب" required placeholder="د. أحمد محمد" {...register('name')} error={errors.name?.message} />
         </FullWidth>
-        <Controller name="type" control={control} render={({ field }) => (
-          <Select label="النوع" required options={typeOptions} {...field} error={errors.type?.message} />
-        )} />
         <Controller name="specialty" control={control} render={({ field }) => (
           <Select label="التخصص" options={specialtyOptions} placeholder="اختر التخصص..." {...field} />
         )} />
         <Input label="رقم الهاتف" type="tel" placeholder="01xxxxxxxxx" {...register('phone')} />
         <FullWidth>
-          <Input label="العنوان" placeholder="المنطقة / الشارع / المبنى" {...register('address')} />
+          <Input label="المنطقة / العنوان" placeholder="المنطقة / الشارع" {...register('area')} />
         </FullWidth>
       </Section>
 
       {/* 2. Location */}
-      <Section title="📍 الموقع الجغرافي">
+      <Section title="📍 الموقع الجغرافي (اختياري)">
         <FullWidth>
           <LocationPicker
             value={locationValue}
@@ -147,7 +134,7 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
         <FullWidth>
           <Textarea
             label="ملاحظات"
-            placeholder="أي ملاحظات أو تعليمات خاصة..."
+            placeholder="أوقات التواجد، اهتمامات الطبيب..."
             rows={4}
             {...register('notes')}
           />

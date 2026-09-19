@@ -1,164 +1,121 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Package, Eye, Package2, AlertTriangle, XCircle, TrendingUp, Users, MapPin } from 'lucide-react';
-import { useProductStore } from '@/modules/products/hooks/useProductStore';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Zap, Users, Pill, Building2, Package, 
+  ShoppingBag, FileText, Activity 
+} from 'lucide-react';
+import { useVisitStore } from '@/modules/visits/hooks/useVisitStore';
+import { useOrderStore } from '@/modules/orders/hooks/useOrderStore';
 import { useDoctorStore } from '@/modules/doctors/hooks/useDoctorStore';
-import { ProductCard } from '@/modules/products/components/ProductCard';
-import { StatCard } from '@/components/ui/States';
-import { Button } from '@/components/ui/Button';
-import { LoadingState } from '@/components/ui/States';
+import { cn } from '@/utils/cn';
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { loading: prodLoading, stats, products, loadProducts } = useProductStore();
-  const { loading: docLoading, stats: docStats, loadDoctors } = useDoctorStore();
 
-  useEffect(() => { loadProducts(); loadDoctors(); }, [loadProducts, loadDoctors]);
+  const { stats: visitStats, loadVisits } = useVisitStore();
+  const { stats: orderStats, loadOrders } = useOrderStore();
+  const { loadDoctors } = useDoctorStore();
 
-  // Get recent 3 active products
-  const recentProducts = products
-    .filter(p => !p.archived)
-    .slice(0, 3);
+  useEffect(() => {
+    loadVisits();
+    loadOrders();
+    loadDoctors();
+  }, [loadVisits, loadOrders, loadDoctors]);
 
-  const loading = prodLoading || docLoading;
-  if (loading) return <LoadingState message="جارٍ تحميل لوحة التحكم..." />;
+  const shortcuts = [
+    { label: 'الأطباء', icon: Users, to: '/doctors', color: 'bg-blue-50 text-blue-600 border-blue-100', hover: 'hover:bg-blue-100 hover:border-blue-200' },
+    { label: 'الصيدليات', icon: Pill, to: '/pharmacies', color: 'bg-emerald-50 text-emerald-600 border-emerald-100', hover: 'hover:bg-emerald-100 hover:border-emerald-200' },
+    { label: 'العيادات', icon: Building2, to: '/clinics', color: 'bg-indigo-50 text-indigo-600 border-indigo-100', hover: 'hover:bg-indigo-100 hover:border-indigo-200' },
+    { label: 'المنتجات', icon: Package, to: '/products', color: 'bg-slate-50 text-slate-600 border-slate-200', hover: 'hover:bg-slate-100 hover:border-slate-300' },
+  ];
+
+  const tools = [
+    { label: 'الزيارات', icon: Activity, to: '/visits', desc: 'سجل الزيارات الميدانية', color: 'text-blue-500' },
+    { label: 'الطلبات', icon: ShoppingBag, to: '/orders', desc: 'إدارة طلبات الصيدليات', color: 'text-orange-500' },
+    { label: 'التقارير الذكية', icon: FileText, to: '/reports', desc: 'تقارير نصية للزيارات', color: 'text-purple-500' },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Welcome */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">مرحباً 👋</h2>
-          <p className="text-sm text-slate-500">لوحة تحكم المندوب الطبي</p>
-        </div>
-        <Button size="sm" onClick={() => navigate('/products/new')}>
-          <Plus size={16} /> منتج جديد
-        </Button>
-      </div>
+    <div className="space-y-6 pb-20">
+      
+      {/* 1. Primary Action: Quick Entry */}
+      <section>
+        <button
+          onClick={() => navigate('/quick-entry')}
+          className="w-full relative overflow-hidden bg-gradient-to-br from-[#0F52BA] to-blue-600 rounded-2xl p-6 text-right shadow-lg shadow-blue-900/20 hover:shadow-xl hover:shadow-blue-900/30 transition-all group"
+        >
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-500" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="text-white">
+              <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                تسجيل سريع <Zap size={24} className="fill-current text-yellow-300" />
+              </h2>
+              <p className="text-blue-100 text-sm opacity-90">سجل زيارتك الميدانية في ثوانٍ</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <Zap size={24} className="text-white" />
+            </div>
+          </div>
+        </button>
+      </section>
 
-      {/* Stats Grid – Products */}
-      <div>
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">إحصائيات المنتجات</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            label="إجمالي المنتجات"
-            value={stats.total}
-            icon={<Package size={18} />}
-            color="blue"
-            onClick={() => navigate('/products')}
-          />
-          <StatCard
-            label="منتجات نشطة"
-            value={stats.active}
-            icon={<TrendingUp size={18} />}
-            color="green"
-            onClick={() => navigate('/products')}
-          />
-          <StatCard
-            label="تنتهي قريباً"
-            value={stats.expiringSoon}
-            icon={<AlertTriangle size={18} />}
-            color="orange"
-            onClick={() => { navigate('/products'); }}
-          />
-          <StatCard
-            label="منتهية الصلاحية"
-            value={stats.expired}
-            icon={<XCircle size={18} />}
-            color="red"
-            onClick={() => { navigate('/products'); }}
-          />
+      {/* 2. Fast Stats */}
+      <section className="grid grid-cols-3 gap-3">
+        <Link to="/visits" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-center hover:border-blue-200 transition-colors">
+          <p className="text-xs text-slate-500 mb-1">زيارات اليوم</p>
+          <p className="text-xl font-bold text-slate-900">{visitStats.today}</p>
+        </Link>
+        <Link to="/orders" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-center hover:border-orange-200 transition-colors">
+          <p className="text-xs text-slate-500 mb-1">طلبات قيد الانتظار</p>
+          <p className="text-xl font-bold text-orange-600">{orderStats.pending}</p>
+        </Link>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-center">
+          <p className="text-xs text-slate-500 mb-1">متابعات مطلوبة</p>
+          <p className="text-xl font-bold text-red-600">{visitStats.pendingFollowUps}</p>
         </div>
-      </div>
+      </section>
 
-      {/* Stats Grid – Doctors */}
-      <div>
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">الأطباء والصيدليات</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            label="إجمالي الأطباء"
-            value={docStats.total}
-            icon={<Users size={18} />}
-            color="blue"
-            onClick={() => navigate('/doctors')}
-          />
-          <StatCard
-            label="مواقع محفوظة"
-            value={docStats.withLocation}
-            icon={<MapPin size={18} />}
-            color="green"
-            onClick={() => navigate('/doctors')}
-          />
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">إجراءات سريعة</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => navigate('/products/new')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-[#0F52BA] text-white rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all"
-          >
-            <Plus size={22} />
-            <span className="text-sm font-medium">إضافة منتج</span>
-          </button>
-          <button
-            onClick={() => navigate('/doctors/new')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 active:scale-95 transition-all"
-          >
-            <Users size={22} />
-            <span className="text-sm font-medium">إضافة طبيب</span>
-          </button>
-          <button
-            onClick={() => navigate('/products')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 active:scale-95 transition-all"
-          >
-            <Eye size={22} className="text-[#0F52BA]" />
-            <span className="text-sm font-medium">عرض المنتجات</span>
-          </button>
-          <button
-            onClick={() => navigate('/doctors')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 active:scale-95 transition-all"
-          >
-            <MapPin size={22} className="text-emerald-500" />
-            <span className="text-sm font-medium">عرض الأطباء</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Products */}
-      {recentProducts.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">أحدث المنتجات</h3>
-            <button
-              onClick={() => navigate('/products')}
-              className="text-xs text-[#0F52BA] font-medium hover:underline"
+      {/* 3. Core Entities Shortcuts */}
+      <section>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3 px-1">قاعدة البيانات</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {shortcuts.map((s, i) => (
+            <Link 
+              key={i} 
+              to={s.to}
+              className={cn(
+                'flex flex-col items-center justify-center p-4 rounded-2xl border transition-all',
+                s.color, s.hover
+              )}
             >
-              عرض الكل
-            </button>
-          </div>
-          <div className="space-y-3">
-            {recentProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+              <s.icon size={24} className="mb-2" />
+              <span className="text-sm font-semibold">{s.label}</span>
+            </Link>
+          ))}
         </div>
-      )}
+      </section>
 
-      {/* Empty dashboard call to action */}
-      {stats.total === 0 && (
-        <div className="bg-blue-50 rounded-2xl p-6 text-center border border-blue-100">
-          <Package2 size={40} className="text-[#0F52BA] mx-auto mb-3" />
-          <h3 className="font-semibold text-slate-900 mb-1">ابدأ بإضافة منتجاتك</h3>
-          <p className="text-sm text-slate-600 mb-4">أضف منتجاتك الطبية لتتبع الأسعار والبونص والصلاحية</p>
-          <Button onClick={() => navigate('/products/new')}>
-            <Plus size={16} /> إضافة أول منتج
-          </Button>
+      {/* 4. Tools */}
+      <section>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3 px-1">أدوات العمل</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {tools.map((t, i) => (
+            <Link 
+              key={i} 
+              to={t.to}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4 hover:border-blue-200 transition-colors group"
+            >
+              <div className={cn('w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-white transition-colors', t.color)}>
+                <t.icon size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">{t.label}</h4>
+                <p className="text-xs text-slate-500 mt-0.5">{t.desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
-      )}
+      </section>
     </div>
   );
 }
-

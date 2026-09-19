@@ -1,20 +1,7 @@
 // ============================================================
-// Doctor / Clinic / Pharmacy Model
+// Doctor Model – Independent Entity
+// A doctor has clinics and may have affiliated pharmacies.
 // ============================================================
-
-export type DoctorType = 'doctor' | 'clinic' | 'pharmacy';
-
-export const DOCTOR_TYPE_LABELS: Record<DoctorType, string> = {
-  doctor: 'طبيب',
-  clinic: 'عيادة',
-  pharmacy: 'صيدلية',
-};
-
-export const DOCTOR_TYPE_ICONS: Record<DoctorType, string> = {
-  doctor: '🩺',
-  clinic: '🏥',
-  pharmacy: '💊',
-};
 
 export const SPECIALTY_OPTIONS = [
   'طب عام',
@@ -37,11 +24,10 @@ export const SPECIALTY_OPTIONS = [
   'نفسية',
   'تخدير',
   'أشعة',
-  'صيدلية',
   'أخرى',
 ];
 
-export interface DoctorLocation {
+export interface GeoLocation {
   latitude: number;
   longitude: number;
 }
@@ -49,21 +35,15 @@ export interface DoctorLocation {
 export interface Doctor {
   id: string;
   name: string;
-  type: DoctorType;
   specialty: string;
+  area: string;         // المنطقة / العنوان
   phone: string;
-  address: string;
   notes: string;
-  location?: DoctorLocation;
+  location?: GeoLocation;
   active: boolean;
   archived: boolean;
-  createdAt: string;  // ISO datetime
-  updatedAt: string;  // ISO datetime
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type DoctorFormData = Omit<Doctor, 'id' | 'createdAt' | 'updatedAt' | 'archived'>;
-
-export type DoctorSummary = Pick<
-  Doctor,
-  'id' | 'name' | 'type' | 'specialty' | 'phone' | 'address' | 'location' | 'active' | 'archived'
->;

@@ -1,25 +1,32 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, Archive, Trash2, RotateCcw,
-  Phone, MapPin, Building2,
+  Phone, MapPin, Building2, Pill, Activity, CalendarDays
 } from 'lucide-react';
-import { getDoctorById } from '@/services/storage/doctorRepository';
+import { getDoctorById, getDoctorClinics, getDoctorPharmacies, getDoctorVisits } from '@/services/storage/doctorRepository';
 import { useDoctorStore } from '../hooks/useDoctorStore';
 import type { Doctor } from '../models/doctor.model';
-import { DOCTOR_TYPE_LABELS, DOCTOR_TYPE_ICONS } from '../models/doctor.model';
+import type { Clinic } from '@/modules/clinics/models/clinic.model';
+import type { Pharmacy } from '@/modules/pharmacies/models/pharmacy.model';
+import type { Visit } from '@/modules/visits/models/visit.model';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/States';
 import { ShareLocationButton } from '../components/ShareLocationButton';
 import { formatCoordinatesDisplay } from '@/services/location/locationService';
-import { cn } from '@/utils/cn';
+
 
 export function DoctorDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { archiveDoctor, unarchiveDoctor, deleteDoctor } = useDoctorStore();
+
   const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -27,11 +34,22 @@ export function DoctorDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    getDoctorById(id).then(d => { setDoctor(d ?? null); setLoading(false); });
+    Promise.all([
+      getDoctorById(id),
+      getDoctorClinics(id),
+      getDoctorPharmacies(id),
+      getDoctorVisits(id)
+    ]).then(([d, c, p, v]) => {
+      setDoctor(d ?? null);
+      setClinics(c);
+      setPharmacies(p);
+      setVisits(v);
+      setLoading(false);
+    });
   }, [id]);
 
-  if (loading) return <LoadingState message="جارٍ تحميل..." />;
-  if (!doctor) return <div className="text-center py-12 text-slate-500">غير موجود</div>;
+  if (loading) return <LoadingState message="جارٍ تحميل الطبيب..." />;
+  if (!doctor) return <div className="text-center py-12 text-slate-500">الطبيب غير موجود</div>;
 
   const handleArchive = async () => {
     setActionLoading(true);
@@ -50,11 +68,9 @@ export function DoctorDetailPage() {
     } finally { setActionLoading(false); setConfirmDelete(false); }
   };
 
-  const typeColor = doctor.type === 'doctor' ? 'blue' : doctor.type === 'clinic' ? 'emerald' : 'purple';
-
   return (
     <>
-      <div className="space-y-4 max-w-2xl mx-auto">
+      <div className="space-y-4 max-w-2xl mx-auto pb-8">
         {/* Top Nav */}
         <div className="flex items-center justify-between">
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50">
@@ -74,27 +90,19 @@ export function DoctorDetailPage() {
         {/* Hero */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex gap-4 p-4">
-            {/* Type Icon */}
-            <div className={cn(
-              'w-20 h-20 sm:w-24 sm:h-24 rounded-xl shrink-0 flex items-center justify-center text-3xl',
-              `bg-${typeColor}-50`
-            )}>
-              {DOCTOR_TYPE_ICONS[doctor.type]}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl shrink-0 flex items-center justify-center text-4xl bg-blue-50">
+              🩺
             </div>
-            {/* Identity */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
               <h1 className="text-xl font-bold text-slate-900 leading-tight">{doctor.name}</h1>
               <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className={cn(
-                  'text-xs rounded-md px-2 py-0.5 font-medium',
-                  `bg-${typeColor}-50 text-${typeColor}-700`
-                )}>
-                  {DOCTOR_TYPE_LABELS[doctor.type]}
-                </span>
                 {doctor.specialty && (
-                  <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-2 py-0.5">
+                  <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-2 py-0.5 font-medium">
                     {doctor.specialty}
                   </span>
+                )}
+                {doctor.area && (
+                  <span className="text-xs text-slate-500 mt-0.5 w-full">{doctor.area}</span>
                 )}
               </div>
             </div>
@@ -102,7 +110,7 @@ export function DoctorDetailPage() {
         </div>
 
         {/* Contact Info */}
-        {(doctor.phone || doctor.address) && (
+        {(doctor.phone) && (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
             <h3 className="text-sm font-semibold text-slate-700">📞 معلومات التواصل</h3>
             {doctor.phone && (
@@ -115,17 +123,6 @@ export function DoctorDetailPage() {
                   <a href={`tel:${doctor.phone}`} className="text-sm font-medium text-[#0F52BA] hover:underline" dir="ltr">
                     {doctor.phone}
                   </a>
-                </div>
-              </div>
-            )}
-            {doctor.address && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                  <Building2 size={16} className="text-slate-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">العنوان</p>
-                  <p className="text-sm font-medium text-slate-900">{doctor.address}</p>
                 </div>
               </div>
             )}
@@ -147,12 +144,10 @@ export function DoctorDetailPage() {
                 </p>
               </div>
             </div>
-
-            {/* ★ Share Location Button – THE MAIN FEATURE ★ */}
             <ShareLocationButton
               location={doctor.location}
               label={doctor.name}
-              address={doctor.address}
+              address={doctor.area}
               size="lg"
               fullWidth
             />
@@ -167,11 +162,90 @@ export function DoctorDetailPage() {
           </div>
         )}
 
+        {/* Linked Clinics */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Building2 size={16} className="text-indigo-500" /> عيادات الطبيب
+            </h3>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/clinics/new', { state: { doctorId: doctor.id } })}>
+              + إضافة
+            </Button>
+          </div>
+          {clinics.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-2">لا توجد عيادات مسجلة</p>
+          ) : (
+            <div className="space-y-2">
+              {clinics.map(c => (
+                <Link to={`/clinics/${c.id}`} key={c.id} className="block p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-colors">
+                  <div className="font-semibold text-sm text-slate-900">{c.name}</div>
+                  <div className="text-xs text-slate-500 mt-1">{c.address}</div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Linked Pharmacies */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Pill size={16} className="text-emerald-500" /> صيدليات تابعة
+            </h3>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/pharmacies/new', { state: { doctorId: doctor.id } })}>
+              + إضافة
+            </Button>
+          </div>
+          {pharmacies.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-2">لا توجد صيدليات تابعة</p>
+          ) : (
+            <div className="space-y-2">
+              {pharmacies.map(p => (
+                <Link to={`/pharmacies/${p.id}`} key={p.id} className="block p-3 rounded-xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors">
+                  <div className="font-semibold text-sm text-slate-900">{p.name}</div>
+                  <div className="text-xs text-slate-500 mt-1">{p.address}</div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Visits */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Activity size={16} className="text-blue-500" /> أحدث الزيارات
+            </h3>
+            <Link to={`/visits?doctorId=${doctor.id}`} className="text-xs text-[#0F52BA] font-medium hover:underline">
+              عرض الكل
+            </Link>
+          </div>
+          {visits.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-2">لم تسجل أي زيارات بعد</p>
+          ) : (
+            <div className="space-y-3">
+              {visits.slice(0, 3).map(v => (
+                <Link to={`/visits/${v.id}`} key={v.id} className="flex gap-3 p-3 rounded-xl border border-slate-50 hover:bg-slate-50 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                    <CalendarDays size={16} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-slate-900">{v.date}</div>
+                    <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                      {v.outcomes.join(' • ') || 'زيارة روتينية'}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Danger Zone */}
         <div className="bg-white rounded-2xl border border-red-100 p-4 space-y-2">
           <h3 className="text-sm font-semibold text-red-600">منطقة الخطر</h3>
           <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} fullWidth>
-            <Trash2 size={14} /> حذف نهائياً
+            <Trash2 size={14} /> حذف الطبيب نهائياً
           </Button>
         </div>
       </div>
@@ -192,7 +266,7 @@ export function DoctorDetailPage() {
         onClose={() => setConfirmDelete(false)}
         onConfirm={handleDelete}
         title="حذف نهائي"
-        message={`هل أنت متأكد من حذف "${doctor.name}"؟ لا يمكن التراجع.`}
+        message={`هل أنت متأكد من حذف "${doctor.name}"؟ سيتم حذف بيانات الطبيب (لن يتم حذف العيادات أو الصيدليات المرتبطة).`}
         confirmLabel="حذف نهائياً"
         variant="danger"
         loading={actionLoading}

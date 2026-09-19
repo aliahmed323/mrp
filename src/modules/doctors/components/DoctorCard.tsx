@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, Edit2, Archive, Trash2, RotateCcw, MapPin, Phone } from 'lucide-react';
+import { MoreVertical, Edit2, Archive, Trash2, RotateCcw, MapPin, Phone, Building2, Pill } from 'lucide-react';
 import type { Doctor } from '../models/doctor.model';
-import { DOCTOR_TYPE_LABELS, DOCTOR_TYPE_ICONS } from '../models/doctor.model';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { useDoctorStore } from '../hooks/useDoctorStore';
 import { ShareLocationButton } from './ShareLocationButton';
+import { getDoctorClinics, getDoctorPharmacies } from '@/services/storage/doctorRepository';
 import { cn } from '@/utils/cn';
 
 interface DoctorCardProps {
@@ -19,6 +19,15 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Relations count
+  const [clinicsCount, setClinicsCount] = useState(0);
+  const [pharmaciesCount, setPharmaciesCount] = useState(0);
+
+  useEffect(() => {
+    getDoctorClinics(doctor.id).then(c => setClinicsCount(c.length));
+    getDoctorPharmacies(doctor.id).then(p => setPharmaciesCount(p.length));
+  }, [doctor.id]);
 
   const handleArchive = async () => {
     setActionLoading(true);
@@ -57,14 +66,9 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
         >
           {/* Top: Icon + Identity */}
           <div className="flex gap-3 p-3">
-            {/* Type Icon */}
-            <div className={cn(
-              'w-12 h-12 rounded-xl shrink-0 flex items-center justify-center text-lg',
-              doctor.type === 'doctor' ? 'bg-blue-50' :
-              doctor.type === 'clinic' ? 'bg-emerald-50' :
-              'bg-purple-50'
-            )}>
-              {DOCTOR_TYPE_ICONS[doctor.type]}
+            {/* Icon */}
+            <div className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center text-xl bg-blue-50">
+              🩺
             </div>
 
             {/* Identity */}
@@ -73,23 +77,14 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
                 {doctor.name}
               </h3>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                <span className={cn(
-                  'text-xs rounded-md px-1.5 py-0.5 font-medium',
-                  doctor.type === 'doctor' ? 'bg-blue-50 text-blue-700' :
-                  doctor.type === 'clinic' ? 'bg-emerald-50 text-emerald-700' :
-                  'bg-purple-50 text-purple-700'
-                )}>
-                  {DOCTOR_TYPE_LABELS[doctor.type]}
-                </span>
                 {doctor.specialty && (
-                  <>
-                    <span className="text-xs text-slate-400">|</span>
-                    <span className="text-xs text-slate-600">{doctor.specialty}</span>
-                  </>
+                  <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-1.5 py-0.5">
+                    {doctor.specialty}
+                  </span>
                 )}
               </div>
-              {doctor.address && (
-                <p className="text-xs text-slate-400 mt-0.5 truncate">{doctor.address}</p>
+              {doctor.area && (
+                <p className="text-xs text-slate-400 mt-1 truncate">{doctor.area}</p>
               )}
             </div>
 
@@ -133,15 +128,25 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
             </div>
           </div>
 
-          {/* Bottom: Contact + Location */}
+          {/* Bottom: Badges */}
           <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border-t border-slate-100 flex-wrap">
             {doctor.phone && (
-              <span className="inline-flex items-center gap-1 text-xs text-slate-600">
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
                 <Phone size={11} /> {doctor.phone}
               </span>
             )}
+            {clinicsCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-indigo-600 bg-indigo-50 px-1.5 rounded">
+                <Building2 size={11} /> {clinicsCount} عيادة
+              </span>
+            )}
+            {pharmaciesCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 bg-emerald-50 px-1.5 rounded">
+                <Pill size={11} /> {pharmaciesCount} صيدلية
+              </span>
+            )}
             {doctor.location && (
-              <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
+              <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">
                 <MapPin size={11} /> موقع محفوظ
               </span>
             )}
@@ -154,7 +159,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
             <ShareLocationButton
               location={doctor.location}
               label={doctor.name}
-              address={doctor.address}
+              address={doctor.area}
               size="sm"
               fullWidth
             />
