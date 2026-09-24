@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, Archive, RotateCcw,
-  Phone, MapPin, Users, ShoppingBag
+  Phone, MapPin, Users, ShoppingBag, User, Contact, PhoneCall, Trash2, Building2
 } from 'lucide-react';
 import { getPharmacyById } from '@/services/storage/pharmacyRepository';
+import { getDoctorById } from '@/services/storage/doctorRepository';
 import { usePharmacyStore } from '../hooks/usePharmacyStore';
 import type { Pharmacy } from '../models/pharmacy.model';
+import type { Doctor } from '@/modules/doctors/models/doctor.model';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/States';
 import { ShareLocationButton } from '@/modules/doctors/components/ShareLocationButton';
 import { formatCoordinatesDisplay } from '@/services/location/locationService';
+import { getCompoundById } from '@/services/storage/compoundRepository';
+import type { Compound } from '@/modules/compounds/models/compound.model';
 
 export function PharmacyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +23,8 @@ export function PharmacyDetailPage() {
   const { archivePharmacy, unarchivePharmacy, deletePharmacy } = usePharmacyStore();
 
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [compound, setCompound] = useState<Compound | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -26,7 +32,25 @@ export function PharmacyDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    getPharmacyById(id).then(p => { setPharmacy(p ?? null); setLoading(false); });
+    const fetchData = async () => {
+      const p = await getPharmacyById(id);
+      setPharmacy(p ?? null);
+      if (p) {
+        // Fetch linked doctors
+        const docIds = p.doctorIds || (p.doctorId ? [p.doctorId] : []);
+        if (docIds.length > 0) {
+          const docs = await Promise.all(docIds.map(docId => getDoctorById(docId)));
+          setDoctors(docs.filter(d => d !== undefined) as Doctor[]);
+        }
+        // Fetch compound
+        if (p.compoundId) {
+          const c = await getCompoundById(p.compoundId);
+          setCompound(c ?? null);
+        }
+      }
+      setLoading(false);
+    };
+    fetchData();
   }, [id]);
 
   if (loading) return <LoadingState message="جارٍ التحميل..." />;
@@ -85,40 +109,116 @@ export function PharmacyDetailPage() {
             </div>
           </div>
         </div>
-
-        {/* Doctor Link */}
-        {pharmacy.ownership === 'doctor-affiliated' && pharmacy.doctorId && (
-          <Link to={`/doctors/${pharmacy.doctorId}`} className="bg-white rounded-2xl border border-blue-100 shadow-sm p-4 flex items-center justify-between hover:bg-blue-50 transition-colors">
+        
+        {/* Compound Link */}
+        {compound && (
+          <Link to={`/compounds/${compound.id}`} className="bg-white rounded-2xl border border-purple-100 shadow-sm p-4 flex items-center justify-between hover:bg-purple-50 transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                <Users size={16} className="text-blue-600" />
+              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                <Building2 size={16} className="text-purple-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">الطبيب المرتبط</p>
-                <p className="text-sm font-bold text-blue-700">{pharmacy.doctorName}</p>
+                <p className="text-xs text-slate-500">المجمع التنظيمي</p>
+                <p className="text-sm font-bold text-purple-700">{compound.name}</p>
               </div>
             </div>
-            <ArrowLeft size={16} className="text-blue-400" />
+            <ArrowLeft size={16} className="text-purple-400" />
           </Link>
         )}
 
+        {/* Doctor Links */}
+        {pharmacy.ownership === 'doctor-affiliated' && doctors.length > 0 && (
+          <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-4">
+            <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-3">
+              <Users size={16} className="text-blue-500" /> الأطباء المرتبطين
+            </h3>
+            <div className="space-y-2">
+              {doctors.map(doctor => (
+                <Link key={doctor.id} to={`/doctors/${doctor.id}`} className="flex items-center justify-between p-2 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 text-lg">
+                      🩺
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{doctor.name}</p>
+                    </div>
+                  </div>
+                  <ArrowLeft size={14} className="text-slate-400" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Contact Info */}
-        {(pharmacy.phone) && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-slate-700">📞 معلومات التواصل</h3>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                <Phone size={16} className="text-blue-600" />
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-4">
+          <h3 className="text-sm font-semibold text-slate-700">👥 جهات الاتصال والمعلومات</h3>
+          
+          {pharmacy.phone && (
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-50">
+              <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                <Phone size={16} className="text-slate-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">الهاتف</p>
+                <p className="text-xs text-slate-500">هاتف الصيدلية العام</p>
                 <a href={`tel:${pharmacy.phone}`} className="text-sm font-medium text-[#0F52BA] hover:underline" dir="ltr">
                   {pharmacy.phone}
                 </a>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {pharmacy.ownerName && (
+             <div className="flex items-center gap-3 pb-3 border-b border-slate-50">
+               <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                 <User size={16} className="text-amber-600" />
+               </div>
+               <div className="flex-1">
+                 <p className="text-xs text-slate-500">صاحب الصيدلية</p>
+                 <p className="text-sm font-medium text-slate-800">{pharmacy.ownerName}</p>
+               </div>
+               {pharmacy.ownerPhone && (
+                 <a href={`tel:${pharmacy.ownerPhone}`} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+                   <PhoneCall size={14} />
+                 </a>
+               )}
+             </div>
+          )}
+
+          {pharmacy.orderManagerName && (
+             <div className="flex items-center gap-3 pb-3 border-b border-slate-50">
+               <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+                 <Contact size={16} className="text-indigo-600" />
+               </div>
+               <div className="flex-1">
+                 <p className="text-xs text-slate-500">مسؤول الطلبات</p>
+                 <p className="text-sm font-medium text-slate-800">{pharmacy.orderManagerName}</p>
+               </div>
+               {pharmacy.orderManagerPhone && (
+                 <a href={`tel:${pharmacy.orderManagerPhone}`} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+                   <PhoneCall size={14} />
+                 </a>
+               )}
+             </div>
+          )}
+
+          {pharmacy.residentPharmacistName && (
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                 <Contact size={16} className="text-emerald-600" />
+               </div>
+               <div className="flex-1">
+                 <p className="text-xs text-slate-500">الصيدلاني المقيم</p>
+                 <p className="text-sm font-medium text-slate-800">{pharmacy.residentPharmacistName}</p>
+               </div>
+               {pharmacy.residentPharmacistPhone && (
+                 <a href={`tel:${pharmacy.residentPharmacistPhone}`} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+                   <PhoneCall size={14} />
+                 </a>
+               )}
+             </div>
+          )}
+        </div>
 
         {/* Location */}
         {pharmacy.location && (
@@ -161,6 +261,14 @@ export function PharmacyDetailPage() {
           </div>
           <Button size="sm" variant="ghost" onClick={() => navigate('/orders')}>
             عرض الطلبات
+          </Button>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="bg-white rounded-2xl border border-red-100 p-4 space-y-2">
+          <h3 className="text-sm font-semibold text-red-600">منطقة الخطر</h3>
+          <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} fullWidth>
+            <Trash2 size={14} /> حذف الصيدلية نهائياً
           </Button>
         </div>
 

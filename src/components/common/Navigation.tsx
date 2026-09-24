@@ -1,164 +1,244 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, Users, Zap, MoreHorizontal, Pill, Building2, ShoppingBag, Activity, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard, Pill, Stethoscope, 
+  PlusCircle, FileText, ShoppingBag, Settings,
+  MoreHorizontal, CalendarDays, Navigation as NavIcon, Building2
+} from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 // ============================================================
-// Bottom Navigation (Mobile)
+// Navigation Config
+// ============================================================
+
+const MAIN_NAV_ITEMS = [
+  { path: '/', label: 'الرئيسية', icon: LayoutDashboard },
+  { path: '/quick-entry', label: 'إضافة سريعة', icon: PlusCircle, isAction: true },
+  { path: '/products', label: 'المنتجات', icon: Package },
+  { path: '/doctors', label: 'الأطباء', icon: Stethoscope },
+];
+
+const MORE_NAV_ITEMS = [
+  { path: '/planning', label: 'التخطيط', icon: NavIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { path: '/pharmacies', label: 'الصيدليات', icon: Pill, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { path: '/compounds', label: 'المجمعات', icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { path: '/visits', label: 'الزيارات', icon: CalendarDays, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { path: '/orders', label: 'الطلبيات', icon: ShoppingBag, color: 'text-orange-600', bg: 'bg-orange-50' },
+  { path: '/reports', label: 'التقارير', icon: FileText, color: 'text-rose-600', bg: 'bg-rose-50' },
+];
+
+// Fallback for missing icon in import
+function Package(props: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M16.5 9.4 7.5 4.21" />
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.29 7 12 12 20.71 7" />
+      <line x1="12" y1="22" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+// ============================================================
+// Mobile Bottom Navigation
 // ============================================================
 
 export function BottomNav() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const location = useLocation();
 
-  const mainItems = [
-    { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
-    { to: '/quick-entry', label: 'تسجيل سريع', icon: Zap, end: false },
-    { to: '/products', label: 'المنتجات', icon: Package, end: false },
-    { to: '/doctors', label: 'الأطباء', icon: Users, end: false },
-  ];
+  // Close more menu on route change
+  useEffect(() => setShowMore(false), [location.pathname]);
 
-  const moreItems = [
-    { to: '/pharmacies', label: 'الصيدليات', icon: Pill },
-    { to: '/clinics', label: 'العيادات', icon: Building2 },
-    { to: '/visits', label: 'الزيارات', icon: Activity },
-    { to: '/orders', label: 'الطلبات', icon: ShoppingBag },
-    { to: '/reports', label: 'التقارير', icon: FileText },
-  ];
+  const isMoreActive = MORE_NAV_ITEMS.some(item => 
+    location.pathname.startsWith(item.path) && item.path !== '/'
+  );
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex sm:hidden safe-bottom px-1">
-        {mainItems.map(({ to, label, icon: Icon, end }) => (
+      {/* Overlay for More Menu */}
+      {showMore && (
+        <div 
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setShowMore(false)}
+        />
+      )}
+
+      {/* More Menu Sheet */}
+      <div className={cn(
+        "fixed bottom-20 left-4 right-4 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 transition-all duration-300 md:hidden",
+        showMore ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0 pointer-events-none"
+      )}>
+        <div className="grid grid-cols-3 gap-4">
+          {MORE_NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => setShowMore(false)}
+              className={({ isActive }) => cn(
+                "flex flex-col items-center gap-2 p-2 rounded-xl transition-colors",
+                isActive ? "bg-slate-50" : "hover:bg-slate-50"
+              )}
+            >
+              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", item.bg, item.color)}>
+                <item.icon size={24} />
+              </div>
+              <span className="text-xs font-medium text-slate-700 text-center">{item.label}</span>
+            </NavLink>
+          ))}
           <NavLink
-            key={to}
-            to={to}
-            end={end}
+            to="/settings"
+            onClick={() => setShowMore(false)}
             className={({ isActive }) => cn(
-              'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-medium transition-colors',
-              isActive ? 'text-[#0F52BA]' : 'text-slate-500'
+              "flex flex-col items-center gap-2 p-2 rounded-xl transition-colors",
+              isActive ? "bg-slate-50" : "hover:bg-slate-50"
             )}
-            onClick={() => setMenuOpen(false)}
           >
-            {({ isActive }) => (
-              <>
-                <span className={cn(
-                  'w-8 h-7 flex items-center justify-center rounded-xl transition-colors',
-                  isActive ? 'bg-blue-50' : ''
-                )}>
-                  <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} className={to === '/quick-entry' ? 'text-orange-500 fill-orange-100' : ''} />
-                </span>
-                {label}
-              </>
-            )}
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+              <Settings size={24} />
+            </div>
+            <span className="text-xs font-medium text-slate-700 text-center">الإعدادات</span>
           </NavLink>
-        ))}
+        </div>
+      </div>
 
-        {/* More Menu Button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className={cn(
-            'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-medium transition-colors',
-            menuOpen ? 'text-[#0F52BA]' : 'text-slate-500'
-          )}
-        >
-          <span className={cn(
-            'w-8 h-7 flex items-center justify-center rounded-xl transition-colors',
-            menuOpen ? 'bg-blue-50' : ''
-          )}>
-            <MoreHorizontal size={20} strokeWidth={menuOpen ? 2.5 : 1.8} />
-          </span>
-          المزيد
-        </button>
-      </nav>
+      {/* Bottom Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe z-50">
+        <div className="flex items-center justify-around h-16 px-2">
+          {MAIN_NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            
+            if (item.isAction) {
+              return (
+                <NavLink key={item.path} to={item.path} className="relative -top-5 flex flex-col items-center gap-1">
+                  <div className="w-14 h-14 bg-[#0F52BA] text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-white border-2 border-transparent hover:border-blue-300 transition-all active:scale-95">
+                    <Icon size={28} />
+                  </div>
+                  <span className="text-[10px] font-bold text-[#0F52BA]">{item.label}</span>
+                </NavLink>
+              );
+            }
 
-      {/* More Menu Overlay */}
-      {menuOpen && (
-        <>
-          <div className="fixed inset-0 z-30 bg-black/20 sm:hidden" onClick={() => setMenuOpen(false)} />
-          <div className="fixed bottom-16 right-2 left-2 z-30 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 sm:hidden grid grid-cols-3 gap-2 animate-in slide-in-from-bottom-4">
-            {moreItems.map(({ to, label, icon: Icon }) => (
+            return (
               <NavLink
-                key={to}
-                to={to}
-                onClick={() => setMenuOpen(false)}
+                key={item.path}
+                to={item.path}
                 className={({ isActive }) => cn(
-                  'flex flex-col items-center justify-center py-3 px-2 rounded-xl text-[11px] font-medium gap-1.5 transition-colors',
-                  isActive ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  "flex flex-col items-center justify-center w-16 h-full gap-1 transition-colors",
+                  isActive ? "text-[#0F52BA]" : "text-slate-400 hover:text-slate-600"
                 )}
               >
-                <Icon size={20} />
-                {label}
+                <Icon size={22} className={cn("transition-transform duration-200")} />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </NavLink>
-            ))}
-          </div>
-        </>
-      )}
+            );
+          })}
+
+          {/* More Button */}
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className={cn(
+              "flex flex-col items-center justify-center w-16 h-full gap-1 transition-colors",
+              (isMoreActive || showMore) ? "text-[#0F52BA]" : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <MoreHorizontal size={22} className={cn("transition-transform duration-200", showMore && "rotate-90")} />
+            <span className="text-[10px] font-medium">المزيد</span>
+          </button>
+        </div>
+      </nav>
     </>
   );
 }
 
 // ============================================================
-// Side Navigation (Desktop)
+// Desktop Side Navigation
 // ============================================================
 
 export function SideNav() {
-  const navGroups = [
-    {
-      title: 'القائمة الرئيسية',
-      items: [
-        { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
-        { to: '/quick-entry', label: 'تسجيل سريع', icon: Zap, end: false, highlight: true },
-      ]
-    },
-    {
-      title: 'قاعدة البيانات',
-      items: [
-        { to: '/doctors', label: 'الأطباء', icon: Users, end: false },
-        { to: '/pharmacies', label: 'الصيدليات', icon: Pill, end: false },
-        { to: '/clinics', label: 'العيادات', icon: Building2, end: false },
-        { to: '/products', label: 'المنتجات', icon: Package, end: false },
-      ]
-    },
-    {
-      title: 'العمليات',
-      items: [
-        { to: '/visits', label: 'سجل الزيارات', icon: Activity, end: false },
-        { to: '/orders', label: 'الطلبات', icon: ShoppingBag, end: false },
-        { to: '/reports', label: 'التقارير', icon: FileText, end: false },
-      ]
-    }
-  ];
-
   return (
-    <nav className="hidden sm:flex flex-col w-64 shrink-0 bg-white border-r border-slate-200 py-4 gap-6 overflow-y-auto">
-      {navGroups.map((group, idx) => (
-        <div key={idx} className="flex flex-col gap-1">
-          <div className="px-5 mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{group.title}</span>
-          </div>
-          {group.items.map(({ to, label, icon: Icon, end, highlight }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) => cn(
-                'mx-3 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-blue-50 text-[#0F52BA]'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                highlight && !isActive && 'text-orange-600 hover:bg-orange-50 hover:text-orange-700'
-              )}
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} className={highlight ? 'fill-orange-100' : ''} />
-                  {label}
-                </>
-              )}
-            </NavLink>
-          ))}
+    <aside className="hidden md:flex flex-col w-64 bg-white border-l border-slate-200 h-screen sticky top-0">
+      <div className="p-6">
+        <h1 className="text-xl font-black bg-gradient-to-r from-[#0F52BA] to-blue-500 bg-clip-text text-transparent">
+          MedRep 360
+        </h1>
+        <p className="text-xs text-slate-500 font-medium mt-1">المساعد الذكي للمندوب</p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-8">
+        
+        {/* Quick Action */}
+        <div className="px-3">
+          <NavLink
+            to="/quick-entry"
+            className="flex items-center justify-center gap-2 w-full bg-[#0F52BA] hover:bg-blue-700 text-white py-3 rounded-xl shadow-sm transition-all hover:shadow active:scale-95 font-medium"
+          >
+            <PlusCircle size={20} />
+            إضافة سريعة
+          </NavLink>
         </div>
-      ))}
-    </nav>
+
+        {/* Main Section */}
+        <div>
+          <p className="px-4 text-xs font-bold text-slate-400 mb-3 tracking-wider">القائمة الرئيسية</p>
+          <div className="space-y-1">
+            <NavLink to="/" className={navLinkClass}>
+              <LayoutDashboard size={20} /> الرئيسية
+            </NavLink>
+            <NavLink to="/planning" className={navLinkClass}>
+              <NavIcon size={20} /> التخطيط والمتابعة
+            </NavLink>
+            <NavLink to="/products" className={navLinkClass}>
+              <Package size={20} /> المنتجات
+            </NavLink>
+          </div>
+        </div>
+
+        {/* Database Section */}
+        <div>
+          <p className="px-4 text-xs font-bold text-slate-400 mb-3 tracking-wider">قاعدة البيانات</p>
+          <div className="space-y-1">
+            <NavLink to="/doctors" className={navLinkClass}>
+              <Stethoscope size={20} /> الأطباء
+            </NavLink>
+            <NavLink to="/pharmacies" className={navLinkClass}>
+              <Pill size={20} /> الصيدليات
+            </NavLink>
+            <NavLink to="/compounds" className={navLinkClass}>
+              <Building2 size={20} /> المجمعات
+            </NavLink>
+          </div>
+        </div>
+
+        {/* Operations Section */}
+        <div>
+          <p className="px-4 text-xs font-bold text-slate-400 mb-3 tracking-wider">العمليات</p>
+          <div className="space-y-1">
+            <NavLink to="/visits" className={navLinkClass}>
+              <CalendarDays size={20} /> سجل الزيارات
+            </NavLink>
+            <NavLink to="/orders" className={navLinkClass}>
+              <ShoppingBag size={20} /> الطلبيات
+            </NavLink>
+            <NavLink to="/reports" className={navLinkClass}>
+              <FileText size={20} /> التقارير الذكية
+            </NavLink>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 border-t border-slate-100">
+        <NavLink to="/settings" className={navLinkClass}>
+          <Settings size={20} /> الإعدادات
+        </NavLink>
+      </div>
+    </aside>
   );
 }
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) => cn(
+  "flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-colors",
+  isActive 
+    ? "bg-blue-50 text-[#0F52BA]" 
+    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+);

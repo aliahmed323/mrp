@@ -1,6 +1,5 @@
 // ============================================================
 // Doctor Model – Independent Entity
-// A doctor has clinics and may have affiliated pharmacies.
 // ============================================================
 
 export const SPECIALTY_OPTIONS = [
@@ -27,16 +26,42 @@ export const SPECIALTY_OPTIONS = [
   'أخرى',
 ];
 
+// تقييم تعامل الطبيب مع المندوب – قابل للتوسعة
+export type DoctorAttitude = 'excellent' | 'good' | 'average' | 'poor';
+
+export const DOCTOR_ATTITUDE_LABELS: Record<DoctorAttitude, string> = {
+  excellent: 'راقي',
+  good: 'جيد',
+  average: 'متوسط',
+  poor: 'رديء',
+};
+
+export const DOCTOR_ATTITUDE_COLORS: Record<DoctorAttitude, string> = {
+  excellent: 'emerald',
+  good: 'blue',
+  average: 'amber',
+  poor: 'red',
+};
+
 export interface GeoLocation {
   latitude: number;
   longitude: number;
 }
 
+// عيادة مضمّنة داخل كيان الطبيب
+export interface DoctorClinic {
+  id: string;
+  name: string;       // اسم العيادة أو وصفها
+  address: string;    // العنوان
+  phone?: string;
+  isPrimary: boolean; // العيادة الأساسية
+}
+
 export interface Doctor {
   id: string;
   name: string;
-  specialty: string;
-  area: string;         // المنطقة / العنوان
+  specialties: string[];          // متعدد الاختصاصات
+  area: string;                   // المنطقة / العنوان
   phone: string;
   notes: string;
   location?: GeoLocation;
@@ -44,6 +69,14 @@ export interface Doctor {
   archived: boolean;
   createdAt: string;
   updatedAt: string;
+
+  // ── حقول جديدة ──────────────────────────────────────────────
+  loyaltyScore: number;           // الإخلاص 0-100
+  attitude: DoctorAttitude;       // تقييم التعامل
+  residentialCompound: string;    // المجمع السكني للطبيب
+  compoundId?: string;            // FK → Compound (للتنظيم الجغرافي)
+  pharmacyIds: string[];          // صيدليات مرتبطة (many-to-many)
+  clinics: DoctorClinic[];        // عيادات الطبيب (embedded)
 }
 
 export type DoctorFormData = Omit<Doctor, 'id' | 'createdAt' | 'updatedAt' | 'archived'>;

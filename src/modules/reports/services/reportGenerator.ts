@@ -1,79 +1,109 @@
-import { getVisitsByDateRange } from '@/services/storage/visitRepository';
+import { db } from '@/services/storage/db';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
-/**
- * Generates a text-based daily/weekly report from visits.
- * Formats the report keeping the original tone and text provided by the user.
- */
 export async function generateTextReport(
-  repName: string, 
-  fromDate: string, 
-  toDate: string
+  repName: string,
+  fromDateStr: string,
+  toDateStr: string
 ): Promise<string> {
-  const visits = await getVisitsByDateRange(fromDate, toDate);
-  
+  const visits = await db.visits
+    .where('date')
+    .between(fromDateStr, toDateStr, true, true)
+    .toArray();
+
   if (visits.length === 0) {
-    return 'لا توجد زيارات مسجلة في هذه الفترة.';
+    return `لا توجد زيارات مسجلة في هذه الفترة (${fromDateStr}${fromDateStr !== toDateStr ? ' إلى ' + toDateStr : ''})`;
   }
 
-  // Format date header
-  const dateHeader = fromDate === toDate 
-    ? formatDate(fromDate)
-    : `${formatDate(fromDate)} - ${formatDate(toDate)}`;
+  // Sort visits chronologically
+  visits.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
-  let report = `${repName || 'مندوب المبيعات'}\n${dateHeader}\n\n`;
+  const isDaily = fromDateStr === toDateStr;
+  const dateObj = new Date(fromDateStr);
+  const dayName = format(dateObj, 'EEEE', { locale: ar });
 
-  // Group visits by date if it's a range, or just list them if single day
-  const isMultiDay = fromDate !== toDate;
+  let report = '';
   
-  let currentDate = '';
-
-  for (const visit of visits) {
-    if (isMultiDay && visit.date !== currentDate) {
-      report += `\n--- ${formatDate(visit.date)} ---\n\n`;
-      currentDate = visit.date;
-    }
-
-    // Entity name
-    let line = `${visit.entityName}: `;
-    
-    const parts: string[] = [];
-    
-    // Outcomes
-    if (visit.outcomes.length > 0) {
-      parts.push(visit.outcomes.join(' و '));
-    }
-    
-    // Feedback
-    if (visit.feedback) {
-      parts.push(visit.feedback);
-    }
-    
-    // Products
-    if (visit.productNames.length > 0) {
-      parts.push(`المنتجات: ${visit.productNames.join('، ')}`);
-    }
-    
-    // Combine parts
-    if (parts.length > 0) {
-      line += parts.join('، ');
-    } else {
-      line += 'زيارة روتينية.';
-    }
-
-    // Finish line with a period if it doesn't have one
-    if (!line.endsWith('.') && !line.endsWith('؟') && !line.endsWith('!')) {
-      line += '.';
-    }
-
-    report += line + '\n\n';
+  // Header
+  if (isDaily) {
+    report += `Daily Report\nName: ${repName || '_________'}\nDate: ${fromDateStr} (${dayName})\n\n`;
+  } else {
+    report += `Period Report\nName: ${repName || '_________'}\nFrom: ${fromDateStr}\nTo: ${toDateStr}\n\n`;
   }
 
-  return report.trim();
-}
+  // Group visits by date for range reports, or just list them for daily
+  if (isDaily) {
+    let index = 1;
+    for (const v of visits) {
+      let line = `${index}. `;
+      const typeLabel = v.type === 'doctor' ? 'Dr.' : v.type === 'pharmacy' ? 'Ph.' : 'Clinic ';
+      line += `${typeLabel} ${v.entityName}`;
+      
+      if (v.productNames && v.productNames.length > 0) {
+         line += ` (${v.productNames.join(', ')})`;
+      }
+      
+      const outcomes = v.outcomes.filter(o => o !== 'أخرى').join(', ');
+      if (outcomes) {
+        line += ` - ${outcomes}`;
+      }
+      
+      if (v.feedback) {
+        line += ` - ${v.feedback}`;
+      }
 
-function formatDate(isoDate: string): string {
-  // ISO is YYYY-MM-DD
-  const parts = isoDate.split('-');
-  if (parts.length !== 3) return isoDate;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      report += line + '\n';
+      index++;
+    }
+  } else {
+    // Group by date
+    const grouped = visits.reduce((acc, visit) => {
+      acc[visit.date] = acc[visit.date] || [];
+      acc[visit.date].push(visit);
+      return acc;
+    }, {} as Record<string, typeof visits>);
+
+    const sortedDates = Object.keys(grouped).sort();
+
+    for (const date of sortedDates) {
+      const dObj = new Date(date);
+      const dName = format(dObj, 'EEEE', { locale: ar });
+      report += `--- ${date} (${dName}) ---\n`;
+      
+      let index = 1;
+      for (const v of grouped[date]) {
+        let line = `${index}. `;
+        const typeLabel = v.type === 'doctor' ? 'Dr.' : v.type === 'pharmacy' ? 'Ph.' : 'Clinic ';
+        line += `${typeLabel} ${v.entityName}`;
+        
+        if (v.productNames && v.productNames.length > 0) {
+           line += ` (${v.productNames.join(', ')})`;
+        }
+        
+        const outcomes = v.outcomes.filter(o => o !== 'أخرى').join(', ');
+        if (outcomes) {
+          line += ` - ${outcomes}`;
+        }
+        
+        if (v.feedback) {
+          line += ` - ${v.feedback}`;
+        }
+
+        report += line + '\n';
+        index++;
+      }
+      report += '\n';
+    }
+  }
+
+  // Summary footer
+  const totalDoctors = visits.filter(v => v.type === 'doctor').length;
+  const totalPharmacies = visits.filter(v => v.type === 'pharmacy').length;
+  const totalVisits = visits.length;
+
+  report += `\nTotal Visits: ${totalVisits}`;
+  report += `\nDoctors: ${totalDoctors} | Pharmacies: ${totalPharmacies}`;
+
+  return report;
 }

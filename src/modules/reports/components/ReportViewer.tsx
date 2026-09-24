@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Copy, Share2, Check } from 'lucide-react';
+import { Copy, Share2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 interface ReportViewerProps {
@@ -16,56 +16,58 @@ export function ReportViewer({ reportText }: ReportViewerProps) {
       setCopied(true);
       toast.success('تم نسخ التقرير');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      toast.error('فشل نسخ التقرير');
+    } catch {
+      toast.error('فشل النسخ');
     }
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({
           title: 'تقرير الزيارات',
           text: reportText,
         });
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          toast.error('فشل مشاركة التقرير');
-        }
+      } else {
+        // Fallback to WhatsApp
+        const url = `https://wa.me/?text=${encodeURIComponent(reportText)}`;
+        window.open(url, '_blank');
       }
-    } else {
-      // Fallback to copy
-      handleCopy();
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        toast.error('فشل المشاركة');
+      }
     }
   };
 
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-      {/* Header Actions */}
-      <div className="flex items-center justify-end gap-2 p-3 border-b border-slate-100 bg-slate-50">
-        <Button variant="secondary" size="sm" onClick={handleCopy} className="gap-2">
-          {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
-          {copied ? 'تم النسخ' : 'نسخ النص'}
-        </Button>
-        <Button size="sm" onClick={handleShare} className="gap-2">
-          <Share2 size={14} /> مشاركة
-        </Button>
+  if (!reportText) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center h-full flex flex-col justify-center">
+        <p className="text-slate-400">حدد المعايير واضغط "تحديث التقرير" لإنشاء التقرير</p>
       </div>
+    );
+  }
 
-      {/* Text Area */}
-      <div className="p-4 flex-1 overflow-y-auto">
-        {reportText ? (
-          <textarea
-            readOnly
-            value={reportText}
-            className="w-full h-full min-h-[300px] bg-transparent resize-none outline-none text-sm text-slate-800 leading-relaxed font-sans"
-            dir="rtl"
-          />
-        ) : (
-          <div className="h-full flex items-center justify-center text-sm text-slate-500 min-h-[300px]">
-            لا توجد بيانات لعرض التقرير.
-          </div>
-        )}
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
+      <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-slate-50 shrink-0">
+        <span className="text-sm font-semibold text-slate-700 px-2">التقرير المولد</span>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={handleCopy} className="text-slate-600">
+            {copied ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Copy size={16} />}
+            <span className="hidden sm:inline">{copied ? 'تم النسخ' : 'نسخ'}</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleShare} className="text-blue-600 hover:bg-blue-50">
+            <Share2 size={16} />
+            <span className="hidden sm:inline">مشاركة</span>
+          </Button>
+        </div>
+      </div>
+      
+      <div className="p-4 flex-1 overflow-y-auto bg-slate-50/50">
+        <pre className="text-xs sm:text-sm text-slate-800 whitespace-pre-wrap font-sans text-left" dir="ltr" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+          {reportText}
+        </pre>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ const futureDate = (days: number) => {
   return d.toISOString().split('T')[0];
 };
 
-export const sampleProducts: Product[] = [
+export const sampleProducts: Product[] = ([
   {
     id: 'prod-001',
     productName: 'Amoxil 500mg',
@@ -229,4 +229,4 @@ export const sampleProducts: Product[] = [
     createdAt: now,
     updatedAt: now,
   },
-];
+] as any[]) as Product[];

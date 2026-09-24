@@ -3,44 +3,80 @@
 // ============================================================
 
 export type BonusType = 'percentage' | 'units' | 'points' | 'cash' | 'none';
+
+// أنواع العبوات / الأشكال – قابلة للتوسعة
+export type PackagingType =
+  | 'strips'
+  | 'ampoules'
+  | 'syrup'
+  | 'syrup_ampoules'
+  | 'vials'
+  | 'sachets'
+  | 'cream_tube'
+  | 'drops'
+  | 'inhaler'
+  | 'suppositories'
+  | 'other';
+
+export const PACKAGING_TYPE_LABELS: Record<PackagingType | string, string> = {
+  strips: 'أشرطة (Strips)',
+  ampoules: 'أمبولات (Ampoules)',
+  syrup: 'شراب (Syrup)',
+  syrup_ampoules: 'أمبولات شراب',
+  vials: 'فيالات (Vials)',
+  sachets: 'أكياس (Sachets)',
+  cream_tube: 'أنبوب كريم',
+  drops: 'قطرات (Drops)',
+  inhaler: 'بخاخ (Inhaler)',
+  suppositories: 'تحاميل (Suppositories)',
+  other: 'أخرى',
+};
+
 export type DosageForm =
   | 'tablet' | 'capsule' | 'syrup' | 'suspension' | 'injection'
   | 'cream' | 'ointment' | 'drops' | 'inhaler' | 'patch' | 'suppository' | 'other';
 
 export type ExpiryStatus = 'valid' | 'expiring_soon' | 'expired';
 
+// مادة فعالة مع تركيزها الخاص
+export interface ActiveIngredient {
+  name: string;          // اسم المادة الفعالة
+  concentration: string; // التركيز (مثال: 500mg, 250mg/5ml)
+}
+
 export interface Product {
   id: string;
   productName: string;
-  genericName: string;
+  genericName: string;          // legacy – يُبقى للتوافق
+  activeIngredients: ActiveIngredient[]; // متعدد المواد الفعالة
   brandName: string;
   company: string;
-  image?: string; // base64 data URL or blob URL
+  image?: string;
   category: string;
-  strength: string;
+  strength: string;             // legacy
   dosageForm: DosageForm | string;
+  packagingType: PackagingType | string; // نوع العبوة الجديد
+  unitsPerPackage: number;      // عدد الوحدات في الباكيت
   boxPrice: number;
-  stripsPerBox: number;
+  stripsPerBox: number;         // legacy
   stripPrice: number;
   netPrice: number;
   bonus: string;
   bonusType: BonusType;
   bonusPoints: number;
-  expiryDate: string; // ISO date string YYYY-MM-DD
+  expiryDate: string;
   protected: boolean;
   burning: boolean;
   competitors: string[];
   notes: string;
   active: boolean;
   archived: boolean;
-  createdAt: string; // ISO datetime string
-  updatedAt: string; // ISO datetime string
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Form-friendly version (same shape, for react-hook-form)
 export type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'archived'>;
 
-// Minimal product for display lists
 export type ProductSummary = Pick<
   Product,
   | 'id' | 'productName' | 'genericName' | 'company' | 'image'
@@ -53,7 +89,6 @@ export type ProductSummary = Pick<
 // Helpers
 // ============================================================
 
-/** Returns the expiry status of a product based on today */
 export function getExpiryStatus(expiryDate: string): ExpiryStatus {
   if (!expiryDate) return 'valid';
   const today = new Date();
@@ -61,7 +96,7 @@ export function getExpiryStatus(expiryDate: string): ExpiryStatus {
   const expiry = new Date(expiryDate);
   const diffDays = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays < 0) return 'expired';
-  if (diffDays <= 90) return 'expiring_soon'; // within 3 months
+  if (diffDays <= 90) return 'expiring_soon';
   return 'valid';
 }
 

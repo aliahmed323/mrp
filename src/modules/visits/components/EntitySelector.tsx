@@ -38,8 +38,8 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
     const q = search.trim().toLowerCase();
     if (type === 'doctor') {
       return doctors
-        .filter(d => !d.archived && (d.name.toLowerCase().includes(q) || d.specialty?.toLowerCase().includes(q)))
-        .map(d => ({ id: d.id, name: d.name, subtitle: d.specialty, doctorId: undefined, doctorName: undefined }));
+        .filter(d => !d.archived && (d.name.toLowerCase().includes(q) || (d.specialties && d.specialties.join(' ').toLowerCase().includes(q))))
+        .map(d => ({ id: d.id, name: d.name, subtitle: d.specialties?.join('، ') || 'طبيب عام', doctorId: undefined, doctorName: undefined }));
     }
     if (type === 'pharmacy') {
       return pharmacies

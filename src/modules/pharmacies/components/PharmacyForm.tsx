@@ -3,13 +3,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X } from 'lucide-react';
 import type { Pharmacy, PharmacyFormData } from '../models/pharmacy.model';
 import { PHARMACY_OWNERSHIP_LABELS } from '../models/pharmacy.model';
 import { Input, Textarea, Select } from '@/components/ui/FormControls';
 import { Button } from '@/components/ui/Button';
 import { LocationPicker } from '@/modules/doctors/components/LocationPicker';
 import { useDoctorStore } from '@/modules/doctors/hooks/useDoctorStore';
+import { useCompoundStore } from '@/modules/compounds/hooks/useCompoundStore';
+import { cn } from '@/utils/cn';
 
 // ============================================================
 // Validation Schema
@@ -18,19 +20,18 @@ import { useDoctorStore } from '@/modules/doctors/hooks/useDoctorStore';
 const schema = z.object({
   name: z.string().min(2, 'الاسم مطلوب'),
   ownership: z.enum(['independent', 'doctor-affiliated']),
-  doctorId: z.string().optional(),
+  doctorIds: z.array(z.string()).default([]),
   address: z.string().default(''),
   phone: z.string().default(''),
   notes: z.string().default(''),
   active: z.boolean().default(true),
-}).superRefine((data, ctx) => {
-  if (data.ownership === 'doctor-affiliated' && !data.doctorId) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'يجب اختيار الطبيب',
-      path: ['doctorId'],
-    });
-  }
+  compoundId: z.string().default(''),
+  ownerName: z.string().default(''),
+  ownerPhone: z.string().default(''),
+  orderManagerName: z.string().default(''),
+  orderManagerPhone: z.string().default(''),
+  residentPharmacistName: z.string().default(''),
+  residentPharmacistPhone: z.string().default(''),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -83,45 +84,75 @@ export function PharmacyForm({ initialData, onSubmit, onCancel, submitLabel = '�
   );
 
   const { doctors, loadDoctors } = useDoctorStore();
+  const { compounds, loadCompounds } = useCompoundStore();
 
-  useEffect(() => { loadDoctors(); }, [loadDoctors]);
+  useEffect(() => { loadDoctors(); loadCompounds(); }, [loadDoctors, loadCompounds]);
 
   const defaultValues: FormValues = {
     name: initialData?.name ?? '',
     ownership: initialData?.ownership ?? 'independent',
-    doctorId: initialData?.doctorId ?? '',
+    doctorIds: initialData?.doctorIds ?? (initialData?.doctorId ? [initialData.doctorId] : []),
     address: initialData?.address ?? '',
     phone: initialData?.phone ?? '',
     notes: initialData?.notes ?? '',
     active: initialData?.active ?? true,
+    compoundId: initialData?.compoundId ?? '',
+    ownerName: initialData?.ownerName ?? '',
+    ownerPhone: initialData?.ownerPhone ?? '',
+    orderManagerName: initialData?.orderManagerName ?? '',
+    orderManagerPhone: initialData?.orderManagerPhone ?? '',
+    residentPharmacistName: initialData?.residentPharmacistName ?? '',
+    residentPharmacistPhone: initialData?.residentPharmacistPhone ?? '',
   };
 
-  const {
-    register, handleSubmit, control, watch, formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues });
+  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues,
+  });
 
   const ownership = watch('ownership');
+  const selectedDoctorIds = watch('doctorIds');
 
-  const doctorOptions = doctors
-    .filter(d => !d.archived)
-    .map(d => ({ value: d.id, label: d.name }));
+  const activeDoctors = doctors.filter(d => !d.archived);
+
+  const compoundOptions = [
+    { value: '', label: 'بدون مجمع' },
+    ...compounds.filter(c => !c.archived).map(c => ({ value: c.id, label: c.name })),
+  ];
 
   const ownershipOptions = Object.entries(PHARMACY_OWNERSHIP_LABELS).map(([v, l]) => ({ value: v, label: l }));
+
+  const toggleDoctor = (id: string) => {
+    const current = selectedDoctorIds ?? [];
+    if (current.includes(id)) {
+      setValue('doctorIds', current.filter(x => x !== id));
+    } else {
+      setValue('doctorIds', [...current, id]);
+    }
+  };
 
   const handleFormSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
-      const selectedDoc = doctors.find(d => d.id === values.doctorId);
       const data: PharmacyFormData = {
         name: values.name,
         ownership: values.ownership,
-        doctorId: values.ownership === 'doctor-affiliated' ? values.doctorId : undefined,
-        doctorName: values.ownership === 'doctor-affiliated' ? selectedDoc?.name : undefined,
+        doctorIds: values.ownership === 'doctor-affiliated' ? values.doctorIds : [],
+        // Keep legacy fields for backward compatibility
+        doctorId: values.ownership === 'doctor-affiliated' && values.doctorIds.length > 0 ? values.doctorIds[0] : undefined,
+        doctorName: values.ownership === 'doctor-affiliated' && values.doctorIds.length > 0 ? activeDoctors.find(d => d.id === values.doctorIds[0])?.name : undefined,
         address: values.address ?? '',
         phone: values.phone ?? '',
         notes: values.notes ?? '',
         location: locationValue,
         active: values.active,
+        compoundId: values.compoundId || undefined,
+        ownerName: values.ownerName,
+        ownerPhone: values.ownerPhone,
+        orderManagerName: values.orderManagerName,
+        orderManagerPhone: values.orderManagerPhone,
+        residentPharmacistName: values.residentPharmacistName,
+        residentPharmacistPhone: values.residentPharmacistPhone,
       };
       await onSubmit(data);
     } finally {
@@ -139,30 +170,101 @@ export function PharmacyForm({ initialData, onSubmit, onCancel, submitLabel = '�
         <Controller name="ownership" control={control} render={({ field }) => (
           <Select label="تبعية الصيدلية" required options={ownershipOptions} {...field} error={errors.ownership?.message} />
         )} />
-        
-        {ownership === 'doctor-affiliated' && (
-          <div className="flex flex-col gap-1">
-            <Controller name="doctorId" control={control} render={({ field }) => (
-              <Select label="الطبيب المرتبط" required options={doctorOptions} placeholder="اختر الطبيب..." {...field} error={errors.doctorId?.message} />
-            )} />
-            <button
-              type="button"
-              onClick={() => navigate('/doctors/new')}
-              className="text-[11px] text-[#0F52BA] font-medium flex items-center gap-1 mt-1 hover:underline w-fit"
-            >
-              <Plus size={12} /> طبيب غير موجود؟ إضافة طبيب جديد
-            </button>
-          </div>
-        )}
 
-        <Input label="رقم الهاتف" type="tel" placeholder="01xxxxxxxxx" {...register('phone')} />
+        <Input label="رقم هاتف الصيدلية العام" type="tel" placeholder="01xxxxxxxxx" {...register('phone')} />
         <FullWidth>
           <Input label="العنوان" placeholder="المنطقة / الشارع / المبنى" {...register('address')} />
         </FullWidth>
       </Section>
 
-      {/* 2. Location */}
-      <Section title="📍 الموقع الجغرافي (اختياري)">
+      {/* 2. Compound */}
+      <Section title="🏘️ المجمع التنظيمي">
+        <FullWidth>
+          <Controller
+            name="compoundId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="المجمع (للتنظيم الجغرافي)"
+                options={compoundOptions}
+                placeholder="اختر مجمعاً..."
+                {...field}
+              />
+            )}
+          />
+        </FullWidth>
+      </Section>
+
+      {/* 3. Associated Doctors */}
+      {ownership === 'doctor-affiliated' && (
+        <Section title="🩺 الأطباء المرتبطين">
+          <FullWidth>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500">اختر طبيباً أو أكثر يتعاملون مع هذه الصيدلية</p>
+              <div className="max-h-48 overflow-y-auto space-y-1 p-1 border border-slate-200 rounded-xl bg-slate-50">
+                {activeDoctors.map(doc => {
+                  const selected = (selectedDoctorIds ?? []).includes(doc.id);
+                  return (
+                    <button
+                      key={doc.id}
+                      type="button"
+                      onClick={() => toggleDoctor(doc.id)}
+                      className={cn(
+                        'w-full flex items-center gap-2 p-2.5 rounded-lg border text-right transition-colors',
+                        selected
+                          ? 'border-blue-300 bg-blue-100 text-blue-800 shadow-sm'
+                          : 'border-transparent hover:bg-slate-200 text-slate-700'
+                      )}
+                    >
+                      <span className="text-lg">🩺</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium block truncate">{doc.name}</span>
+                        <span className="text-[10px] text-slate-500 truncate block">{(doc.specialties || []).join('، ')}</span>
+                      </div>
+                      {selected && <X size={14} className="text-blue-600 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/doctors/new')}
+                className="text-[11px] text-[#0F52BA] font-medium flex items-center gap-1 mt-2 hover:underline w-fit"
+              >
+                <Plus size={12} /> طبيب غير موجود؟ إضافة طبيب جديد
+              </button>
+            </div>
+          </FullWidth>
+        </Section>
+      )}
+
+      {/* 4. Contact Persons */}
+      <Section title="👥 جهات الاتصال في الصيدلية">
+        <FullWidth>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3 border border-slate-100 rounded-xl bg-slate-50 space-y-3">
+              <h4 className="text-xs font-bold text-slate-700">صاحب الصيدلية (Owner)</h4>
+              <Input label="الاسم" placeholder="اسم المالك" {...register('ownerName')} />
+              <Input label="رقم الهاتف" type="tel" placeholder="رقم الهاتف" {...register('ownerPhone')} />
+            </div>
+            <div className="p-3 border border-slate-100 rounded-xl bg-slate-50 space-y-3">
+              <h4 className="text-xs font-bold text-slate-700">مسؤول الطلبات</h4>
+              <Input label="الاسم" placeholder="اسم مسؤول الطلبات" {...register('orderManagerName')} />
+              <Input label="رقم الهاتف" type="tel" placeholder="رقم الهاتف" {...register('orderManagerPhone')} />
+            </div>
+            <div className="p-3 border border-slate-100 rounded-xl bg-slate-50 space-y-3 sm:col-span-2">
+              <h4 className="text-xs font-bold text-slate-700">الصيدلاني المقيم (Resident)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input label="الاسم" placeholder="اسم الصيدلاني" {...register('residentPharmacistName')} />
+                <Input label="رقم الهاتف" type="tel" placeholder="رقم الهاتف" {...register('residentPharmacistPhone')} />
+              </div>
+            </div>
+          </div>
+        </FullWidth>
+      </Section>
+
+      {/* 5. Location */}
+      <Section title="📍 الموقع الجغرافي (اختياري)" defaultOpen={false}>
         <FullWidth>
           <LocationPicker
             value={locationValue}
@@ -171,7 +273,7 @@ export function PharmacyForm({ initialData, onSubmit, onCancel, submitLabel = '�
         </FullWidth>
       </Section>
 
-      {/* 3. Notes */}
+      {/* 6. Notes */}
       <Section title="📝 ملاحظات" defaultOpen={false}>
         <FullWidth>
           <Textarea

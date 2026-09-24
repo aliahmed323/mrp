@@ -23,7 +23,11 @@ export async function getDoctorById(id: string): Promise<Doctor | undefined> {
 
 export async function createDoctor(data: DoctorFormData): Promise<Doctor> {
   const doctor: Doctor = {
-    ...data, id: generateId(), archived: false, createdAt: now(), updatedAt: now(),
+    ...data,
+    id: generateId(),
+    archived: false,
+    createdAt: now(),
+    updatedAt: now(),
   };
   await db.doctors.add(doctor);
   return doctor;
@@ -54,9 +58,13 @@ export async function getDoctorStats() {
   return { total: all.length, withLocation: all.filter(d => !!d.location).length };
 }
 
-/** Get pharmacies affiliated with a doctor */
+/** Get pharmacies affiliated with a doctor (via doctorIds array) */
 export async function getDoctorPharmacies(doctorId: string) {
-  return db.pharmacies.where('doctorId').equals(doctorId).toArray();
+  const all = await db.pharmacies.filter(p => !p.archived).toArray();
+  return all.filter(p =>
+    (p.doctorIds && p.doctorIds.includes(doctorId)) ||
+    p.doctorId === doctorId // legacy fallback
+  );
 }
 
 /** Get clinics belonging to a doctor */

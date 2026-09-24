@@ -1,10 +1,10 @@
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { Product, ProductFormData, BonusType, DosageForm } from '../models/product.model';
-import { DOSAGE_FORM_LABELS, BONUS_TYPE_LABELS } from '../models/product.model';
+import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import type { Product, ProductFormData, BonusType, DosageForm, PackagingType } from '../models/product.model';
+import { DOSAGE_FORM_LABELS, BONUS_TYPE_LABELS, PACKAGING_TYPE_LABELS } from '../models/product.model';
 import { Input, Textarea, Select, Toggle } from '@/components/ui/FormControls';
 import { Button } from '@/components/ui/Button';
 import { ProductImageUpload } from './ProductImageUpload';
@@ -13,17 +13,25 @@ import { ProductImageUpload } from './ProductImageUpload';
 // Validation Schema
 // ============================================================
 
+const activeIngredientSchema = z.object({
+  name: z.string().min(1, 'اسم المادة الفعالة مطلوب'),
+  concentration: z.string().default(''),
+});
+
 const schema = z.object({
   productName: z.string().min(2, 'اسم المنتج مطلوب (حرفان على الأقل)'),
-  genericName: z.string().min(1, 'المادة الفعالة مطلوبة'),
+  genericName: z.string().default(''), // Legacy fallback
+  activeIngredients: z.array(activeIngredientSchema).min(1, 'يجب إضافة مادة فعالة واحدة على الأقل'),
   brandName: z.string().default(''),
   company: z.string().min(1, 'الشركة مطلوبة'),
   image: z.string().optional(),
   category: z.string().min(1, 'الفئة مطلوبة'),
-  strength: z.string().min(1, 'التركيز مطلوب'),
+  strength: z.string().default(''), // Legacy fallback
   dosageForm: z.string().min(1, 'الشكل الصيدلاني مطلوب'),
+  packagingType: z.string().default('strips'),
+  unitsPerPackage: z.coerce.number().int().min(1, 'يجب أن يكون أكبر من 0').default(1),
   boxPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
-  stripsPerBox: z.coerce.number().int().min(1, 'يجب أن يكون أكبر من 0'),
+  stripsPerBox: z.coerce.number().int().min(1, 'يجب أن يكون أكبر من 0').default(1), // Legacy fallback
   stripPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
   netPrice: z.coerce.number().min(0, 'يجب أن يكون غير سالب'),
   bonus: z.string().default(''),
@@ -32,7 +40,7 @@ const schema = z.object({
   expiryDate: z.string().min(1, 'تاريخ الصلاحية مطلوب'),
   protected: z.boolean().default(false),
   burning: z.boolean().default(false),
-  competitors: z.string().default(''), // comma separated, parsed on submit
+  competitors: z.string().default(''),
   notes: z.string().default(''),
   active: z.boolean().default(true),
 });
@@ -64,9 +72,6 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
   );
 }
 
-// ============================================================
-// Form span helpers
-// ============================================================
 const FullWidth = ({ children }: { children: React.ReactNode }) => (
   <div className="sm:col-span-2">{children}</div>
 );
@@ -77,6 +82,7 @@ const FullWidth = ({ children }: { children: React.ReactNode }) => (
 
 const dosageFormOptions = Object.entries(DOSAGE_FORM_LABELS).map(([v, l]) => ({ value: v, label: l }));
 const bonusTypeOptions = Object.entries(BONUS_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
+const packagingTypeOptions = Object.entries(PACKAGING_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
 const categoryOptions = [
   'Antibiotics', 'Cardiovascular', 'Diabetes', 'Gastroenterology',
   'Pain & Inflammation', 'Neurology', 'Respiratory', 'Oncology',
@@ -100,12 +106,15 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
   const defaultValues: FormValues = {
     productName: initialData?.productName ?? '',
     genericName: initialData?.genericName ?? '',
+    activeIngredients: initialData?.activeIngredients ?? [{ name: '', concentration: '' }],
     brandName: initialData?.brandName ?? '',
     company: initialData?.company ?? '',
     image: initialData?.image ?? undefined,
     category: initialData?.category ?? '',
     strength: initialData?.strength ?? '',
     dosageForm: initialData?.dosageForm ?? 'tablet',
+    packagingType: (initialData?.packagingType as string) ?? 'strips',
+    unitsPerPackage: initialData?.unitsPerPackage ?? initialData?.stripsPerBox ?? 1,
     boxPrice: initialData?.boxPrice ?? 0,
     stripsPerBox: initialData?.stripsPerBox ?? 1,
     stripPrice: initialData?.stripPrice ?? 0,
@@ -122,16 +131,33 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
   };
 
   const {
-    register, handleSubmit, control, formState: { errors },
+    register, handleSubmit, control, formState: { errors }, watch
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues });
+
+  const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
+    control,
+    name: 'activeIngredients'
+  });
+
+  const packagingType = watch('packagingType');
+  const isStrip = packagingType === 'strips';
 
   const handleFormSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
+      // Sync legacy fields based on new fields
+      const genericName = values.activeIngredients.map(a => a.name).join(' + ');
+      const strength = values.activeIngredients.map(a => a.concentration).join(' + ');
+      const stripsPerBox = isStrip ? values.unitsPerPackage : 1;
+
       const data: ProductFormData = {
         ...values,
+        genericName,
+        strength,
+        stripsPerBox,
         bonusType: values.bonusType as BonusType,
         dosageForm: values.dosageForm as DosageForm,
+        packagingType: values.packagingType as PackagingType,
         competitors: values.competitors
           ? values.competitors.split(',').map(s => s.trim()).filter(Boolean)
           : [],
@@ -145,7 +171,6 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} noValidate className="space-y-3">
-
       {/* 1. Basic Info */}
       <Section title="📋 المعلومات الأساسية">
         <FullWidth>
@@ -161,28 +186,76 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
             )}
           />
         </FullWidth>
-        <Input label="اسم المنتج" required placeholder="Amoxil 500mg" {...register('productName')} error={errors.productName?.message} />
-        <Input label="المادة الفعالة (Generic)" required placeholder="Amoxicillin" {...register('genericName')} error={errors.genericName?.message} />
-        <Input label="الاسم التجاري (Brand)" placeholder="Amoxil" {...register('brandName')} />
+        <Input label="اسم المنتج (التجاري)" required placeholder="Amoxil" {...register('productName')} error={errors.productName?.message} />
         <Input label="الشركة" required placeholder="GSK" {...register('company')} error={errors.company?.message} />
         <Controller name="category" control={control} render={({ field }) => (
           <Select label="الفئة" required options={categoryOptions} placeholder="اختر الفئة..." {...field} error={errors.category?.message} />
         )} />
-        <Input label="التركيز" required placeholder="500mg" {...register('strength')} error={errors.strength?.message} />
         <Controller name="dosageForm" control={control} render={({ field }) => (
           <Select label="الشكل الصيدلاني" required options={dosageFormOptions} {...field} error={errors.dosageForm?.message} />
         )} />
+      </Section>
+
+      {/* 2. Active Ingredients */}
+      <Section title="🧪 المواد الفعالة والتركيز">
+        <FullWidth>
+          <div className="space-y-3">
+            {ingredientFields.map((field, index) => (
+              <div key={field.id} className="flex gap-2 items-start bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    placeholder="اسم المادة الفعالة (مثال: Amoxicillin)"
+                    {...register(`activeIngredients.${index}.name` as const)}
+                    error={errors.activeIngredients?.[index]?.name?.message}
+                  />
+                  <Input
+                    placeholder="التركيز (مثال: 500mg)"
+                    {...register(`activeIngredients.${index}.concentration` as const)}
+                  />
+                </div>
+                {ingredientFields.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeIngredient(index)}
+                    className="w-10 h-10 flex items-center justify-center shrink-0 rounded-lg text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => appendIngredient({ name: '', concentration: '' })}
+              className="text-xs text-[#0F52BA] font-medium flex items-center gap-1 hover:underline"
+            >
+              <Plus size={14} /> إضافة مادة فعالة أخرى
+            </button>
+          </div>
+        </FullWidth>
+      </Section>
+
+      {/* 3. Packaging & Pricing */}
+      <Section title="📦 العبوة والأسعار">
+        <Controller name="packagingType" control={control} render={({ field }) => (
+          <Select label="نوع العبوة" required options={packagingTypeOptions} {...field} />
+        )} />
+        <Input 
+          label={`عدد ${PACKAGING_TYPE_LABELS[packagingType] || 'الوحدات'} في الباكيت`} 
+          required 
+          type="number" 
+          min="1" 
+          {...register('unitsPerPackage')} 
+          error={errors.unitsPerPackage?.message} 
+        />
         <Input label="سعر الباكيت كاملاً" required type="number" step="0.01" min="0" placeholder="0.00" {...register('boxPrice')} error={errors.boxPrice?.message} />
-        <Input label="كم شريط في الباكيت" required type="number" min="1" placeholder="مثال: 2" {...register('stripsPerBox')} error={errors.stripsPerBox?.message} />
+        <Input label="صافي السعر للوحدة (Net Price)" required type="number" step="0.01" min="0" placeholder="0.00" {...register('netPrice')} error={errors.netPrice?.message} />
+        {isStrip && (
+          <Input label="سعر الشريط" required type="number" step="0.01" min="0" placeholder="0.00" {...register('stripPrice')} error={errors.stripPrice?.message} />
+        )}
       </Section>
 
-      {/* 2. Pricing */}
-      <Section title="💰 الأسعار">
-        <Input label="سعر الشريط" required type="number" step="0.01" min="0" placeholder="0.00" {...register('stripPrice')} error={errors.stripPrice?.message} />
-        <Input label="صافي السعر للمجموع (Net Price)" required type="number" step="0.01" min="0" placeholder="0.00" {...register('netPrice')} error={errors.netPrice?.message} />
-      </Section>
-
-      {/* 3. Bonus */}
+      {/* 4. Bonus */}
       <Section title="🎁 البونص">
         <Input label="وصف البونص" placeholder="1+1 أو 10% أو ..." {...register('bonus')} />
         <Controller name="bonusType" control={control} render={({ field }) => (
@@ -191,7 +264,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
         <Input label="نقاط البونص" type="number" min="0" {...register('bonusPoints')} error={errors.bonusPoints?.message} />
       </Section>
 
-      {/* 4. Status */}
+      {/* 5. Status */}
       <Section title="🔖 الحالة">
         <div className="sm:col-span-2 space-y-3 pt-2">
           <Controller name="protected" control={control} render={({ field }) => (
@@ -221,7 +294,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
         </div>
       </Section>
 
-      {/* 5. Expiry */}
+      {/* 6. Expiry */}
       <Section title="📅 الصلاحية">
         <FullWidth>
           <Input
@@ -234,7 +307,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
         </FullWidth>
       </Section>
 
-      {/* 6. Competitors */}
+      {/* 7. Competitors */}
       <Section title="⚔️ المنافسون" defaultOpen={false}>
         <FullWidth>
           <Input
@@ -246,7 +319,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, submitLabel = 'ح
         </FullWidth>
       </Section>
 
-      {/* 7. Notes */}
+      {/* 8. Notes */}
       <Section title="📝 ملاحظات" defaultOpen={false}>
         <FullWidth>
           <Textarea

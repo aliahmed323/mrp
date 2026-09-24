@@ -1,6 +1,5 @@
 // ============================================================
 // Pharmacy Model – Independent Entity
-// A pharmacy can be independent or affiliated with a doctor.
 // ============================================================
 
 import type { GeoLocation } from '@/modules/doctors/models/doctor.model';
@@ -16,8 +15,10 @@ export interface Pharmacy {
   id: string;
   name: string;
   ownership: PharmacyOwnership;
-  doctorId?: string;     // FK → Doctor (only when doctor-affiliated)
-  doctorName?: string;   // cached for display
+  // علاقة many-to-many مع الأطباء
+  doctorIds: string[];       // FK → Doctor[]
+  doctorId?: string;         // legacy – يُبقى للتوافق مع البيانات القديمة
+  doctorName?: string;       // cached for display (legacy)
   address: string;
   phone: string;
   notes: string;
@@ -26,6 +27,21 @@ export interface Pharmacy {
   archived: boolean;
   createdAt: string;
   updatedAt: string;
+
+  // ── حقول جديدة: معلومات المسؤولين ───────────────────────────
+  compoundId?: string;              // FK → Compound
+
+  // صاحب الصيدلية
+  ownerName: string;
+  ownerPhone: string;
+
+  // مسؤول الطلبات
+  orderManagerName: string;
+  orderManagerPhone: string;
+
+  // الصيدلاني المقيم
+  residentPharmacistName: string;
+  residentPharmacistPhone: string;
 }
 
 export type PharmacyFormData = Omit<Pharmacy, 'id' | 'createdAt' | 'updatedAt' | 'archived'>;

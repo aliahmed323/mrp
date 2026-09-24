@@ -34,33 +34,40 @@ export const useDoctorStore = create<DoctorState>((set, get) => ({
       set({ doctors: all, stats, loading: false });
     } catch { set({ error: 'فشل تحميل الأطباء', loading: false }); }
   },
+
   addDoctor: async (data) => {
     const doc = await createDoctor(data);
     const [all, stats] = await Promise.all([getAllDoctors(), getDoctorStats()]);
     set({ doctors: all, stats }); return doc;
   },
+
   editDoctor: async (id, data) => {
     const doc = await updateDoctor(id, data);
     const [all, stats] = await Promise.all([getAllDoctors(), getDoctorStats()]);
     set({ doctors: all, stats }); return doc;
   },
+
   archiveDoctor: async (id) => {
     await archiveDoctor(id);
     const [all, stats] = await Promise.all([getAllDoctors(), getDoctorStats()]);
     set({ doctors: all, stats });
   },
+
   unarchiveDoctor: async (id) => {
     await unarchiveDoctor(id);
     const [all, stats] = await Promise.all([getAllDoctors(), getDoctorStats()]);
     set({ doctors: all, stats });
   },
+
   deleteDoctor: async (id) => {
     await deleteDoctor(id);
     const [all, stats] = await Promise.all([getAllDoctors(), getDoctorStats()]);
     set({ doctors: all, stats });
   },
+
   setSearchQuery: (q) => set({ searchQuery: q }),
   setShowArchived: (show) => set({ showArchived: show }),
+
   getFilteredDoctors: () => {
     const { doctors, searchQuery, showArchived } = get();
     const q = searchQuery.trim().toLowerCase();
@@ -68,9 +75,11 @@ export const useDoctorStore = create<DoctorState>((set, get) => ({
       if (!showArchived && d.archived) return false;
       if (showArchived && !d.archived) return false;
       if (q) {
+        const specialties = (d.specialties || []).join(' ');
         return d.name.toLowerCase().includes(q) ||
-          d.specialty.toLowerCase().includes(q) ||
-          d.area.toLowerCase().includes(q);
+          specialties.toLowerCase().includes(q) ||
+          d.area.toLowerCase().includes(q) ||
+          (d.residentialCompound || '').toLowerCase().includes(q);
       }
       return true;
     });

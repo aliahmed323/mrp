@@ -23,7 +23,11 @@ export async function getPharmacyById(id: string): Promise<Pharmacy | undefined>
 
 export async function createPharmacy(data: PharmacyFormData): Promise<Pharmacy> {
   const pharmacy: Pharmacy = {
-    ...data, id: generateId(), archived: false, createdAt: now(), updatedAt: now(),
+    ...data,
+    id: generateId(),
+    archived: false,
+    createdAt: now(),
+    updatedAt: now(),
   };
   await db.pharmacies.add(pharmacy);
   return pharmacy;
@@ -57,4 +61,13 @@ export async function getPharmacyStats() {
     affiliated: all.filter(p => p.ownership === 'doctor-affiliated').length,
     withLocation: all.filter(p => !!p.location).length,
   };
+}
+
+/** Get pharmacies linked to a specific doctor (many-to-many) */
+export async function getPharmacyDoctors(pharmacyId: string) {
+  const pharmacy = await db.pharmacies.get(pharmacyId);
+  if (!pharmacy) return [];
+  const ids = pharmacy.doctorIds || (pharmacy.doctorId ? [pharmacy.doctorId] : []);
+  if (ids.length === 0) return [];
+  return db.doctors.where('id').anyOf(ids).toArray();
 }

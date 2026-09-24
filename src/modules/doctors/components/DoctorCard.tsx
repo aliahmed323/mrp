@@ -77,9 +77,9 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
                 {doctor.name}
               </h3>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                {doctor.specialty && (
+                {doctor.specialties && doctor.specialties.length > 0 && (
                   <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-1.5 py-0.5">
-                    {doctor.specialty}
+                    {doctor.specialties.join('، ')}
                   </span>
                 )}
               </div>
