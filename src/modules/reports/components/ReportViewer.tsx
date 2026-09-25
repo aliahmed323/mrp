@@ -88,24 +88,24 @@ export function ReportViewer({ reportText }: ReportViewerProps) {
       <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50 min-h-0">
         {editMode ? (
           <textarea
-            className="w-full h-full min-h-[600px] p-4 text-sm sm:text-base leading-relaxed bg-white rounded-xl border border-amber-200 outline-none resize-none text-slate-800"
+            className="w-full h-full min-h-[80vh] p-4 text-base sm:text-lg leading-relaxed bg-white rounded-xl border border-amber-200 outline-none resize-y text-slate-800"
             style={{
               direction: 'rtl',
               textAlign: 'right',
               fontFamily: 'system-ui, -apple-system, Tahoma, sans-serif',
-              lineHeight: '1.9',
+              lineHeight: '2',
             }}
             value={editedText}
             onChange={e => setEditedText(e.target.value)}
           />
         ) : (
           <pre
-            className="text-sm sm:text-base leading-relaxed text-slate-800 whitespace-pre-wrap bg-white rounded-xl border border-slate-100 p-5 shadow-sm min-h-[600px] h-full"
+            className="text-base sm:text-lg leading-relaxed text-slate-800 whitespace-pre-wrap bg-white rounded-xl border border-slate-100 p-6 shadow-sm min-h-[80vh] h-full"
             style={{
               direction: 'rtl',
               textAlign: 'right',
               fontFamily: 'system-ui, -apple-system, Tahoma, sans-serif',
-              lineHeight: '1.9',
+              lineHeight: '2',
               unicodeBidi: 'embed',
             }}
           >

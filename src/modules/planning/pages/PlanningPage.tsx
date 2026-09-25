@@ -273,6 +273,35 @@ export function PlanningPage() {
                   >
                     تفاصيل الزيارة
                   </Button>
+                  
+                  {activeTab === 'archive' && (
+                    <div className="flex gap-2 mt-2 sm:mt-0">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1 bg-white hover:bg-emerald-50 text-emerald-600 border-emerald-200"
+                        onClick={async () => {
+                          await updateVisit(visit.id, { isFollowUpCompleted: false });
+                          loadData();
+                        }}
+                      >
+                        استرجاع
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1 bg-white hover:bg-red-50 text-red-600 border-red-200"
+                        onClick={async () => {
+                          if (confirm('هل أنت متأكد من حذف هذه المتابعة؟ لن يتم حذف الزيارة الأصلية بل المتابعة فقط.')) {
+                            await updateVisit(visit.id, { followUpRequired: false, isFollowUpCompleted: false });
+                            loadData();
+                          }
+                        }}
+                      >
+                        إزالة المتابعة
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

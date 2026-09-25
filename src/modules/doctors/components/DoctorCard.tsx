@@ -4,7 +4,6 @@ import { MoreVertical, Edit2, Archive, Trash2, RotateCcw, MapPin, Phone, Buildin
 import type { Doctor } from '../models/doctor.model';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { useDoctorStore } from '../hooks/useDoctorStore';
-import { ShareLocationButton } from './ShareLocationButton';
 import { getDoctorClinics, getDoctorPharmacies } from '@/services/storage/doctorRepository';
 import { cn } from '@/utils/cn';
 
@@ -147,24 +146,13 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
             )}
             {doctor.location && (
               <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">
-                <MapPin size={11} /> موقع محفوظ
+                <MapPin size={11} /> الموقع
               </span>
             )}
           </div>
         </div>
 
-        {/* Share Location Button (outside the navigable card area) */}
-        {doctor.location && (
-          <div className="px-3 pb-3 pt-1" onClick={e => e.stopPropagation()}>
-            <ShareLocationButton
-              location={doctor.location}
-              label={doctor.name}
-              address={doctor.area}
-              size="sm"
-              fullWidth
-            />
-          </div>
-        )}
+
       </div>
 
       {/* Confirm Archive */}

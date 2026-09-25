@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, CalendarDays, Clock } from 'lucide-react';
+import { Plus, Search, CalendarDays, Clock, ChevronDown } from 'lucide-react';
 import { useVisitStore } from '../hooks/useVisitStore';
 import { Button } from '@/components/ui/Button';
 import { LoadingState, EmptyState } from '@/components/ui/States';
 import { VISIT_TYPE_ICONS } from '../models/visit.model';
-
+import { cn } from '@/utils/cn';
 
 export function VisitListPage() {
   const navigate = useNavigate();
@@ -14,8 +14,16 @@ export function VisitListPage() {
 
   const { visits, loadVisits, loading } = useVisitStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
 
   useEffect(() => { loadVisits(); }, [loadVisits]);
+
+  const toggleDate = (date: string) => {
+    setExpandedDates(prev => ({
+      ...prev,
+      [date]: prev[date] !== undefined ? !prev[date] : false // Toggle from default true
+    }));
+  };
 
   if (loading) return <LoadingState message="جارٍ تحميل الزيارات..." />;
 
@@ -77,57 +85,90 @@ export function VisitListPage() {
           action={!searchQuery ? { label: 'تسجيل سريع ⚡', onClick: () => navigate('/quick-entry') } : undefined}
         />
       ) : (
-        <div className="space-y-6">
-          {sortedDates.map(date => (
-            <div key={date} className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-500 flex items-center gap-2 sticky top-14 bg-[#F8FAFC] py-1 z-10">
-                <CalendarDays size={16} /> {date}
-              </h3>
-              <div className="space-y-3 pl-2 sm:pl-0">
-                {grouped[date].map(visit => (
-                  <div 
-                    key={visit.id}
-                    onClick={() => navigate(`/visits/${visit.id}`)}
-                    className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-3"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center shrink-0">
-                      <span className="text-lg">{VISIT_TYPE_ICONS[visit.type]}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-sm text-slate-900 truncate pr-2">{visit.entityName}</h4>
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1 shrink-0 bg-slate-50 px-1.5 py-0.5 rounded">
-                          <Clock size={10} /> {visit.time}
-                        </span>
-                      </div>
-                      
-                      {visit.outcomes.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-1.5">
-                          {visit.outcomes.map((out, i) => (
-                            <span key={i} className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
-                              {out}
-                            </span>
-                          ))}
+        <div className="space-y-4">
+          {sortedDates.map(date => {
+            const isExpanded = expandedDates[date] ?? (date === sortedDates[0]); // First date expanded by default
+            
+            // Format date nicely
+            const dateObj = new Date(date);
+            const displayDate = isNaN(dateObj.getTime()) ? date : new Intl.DateTimeFormat('ar-EG', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
+
+            return (
+              <div key={date} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all">
+                {/* Header Toggle */}
+                <button 
+                  onClick={() => toggleDate(date)}
+                  className="w-full flex items-center justify-between p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarDays size={18} className="text-blue-600" />
+                    <h3 className="text-sm font-bold text-slate-800">{displayDate}</h3>
+                    <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold ml-2">
+                      {grouped[date].length}
+                    </span>
+                  </div>
+                  <ChevronDown 
+                    size={18} 
+                    className={cn("text-slate-400 transition-transform duration-300", isExpanded ? "rotate-180" : "")} 
+                  />
+                </button>
+
+                {/* Content */}
+                <div 
+                  className={cn(
+                    "grid transition-all duration-300 ease-in-out",
+                    isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="p-3 space-y-3 bg-white">
+                      {grouped[date].map(visit => (
+                        <div 
+                          key={visit.id}
+                          onClick={() => navigate(`/visits/${visit.id}`)}
+                          className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm hover:border-blue-200 hover:shadow-md transition-all cursor-pointer flex gap-3"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center shrink-0">
+                            <span className="text-lg">{VISIT_TYPE_ICONS[visit.type]}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="font-bold text-sm text-slate-900 truncate pr-2">{visit.entityName}</h4>
+                              <span className="text-[10px] text-slate-400 flex items-center gap-1 shrink-0 bg-slate-50 px-1.5 py-0.5 rounded">
+                                <Clock size={10} /> {visit.time}
+                              </span>
+                            </div>
+                            
+                            {visit.outcomes.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-1.5">
+                                {visit.outcomes.map((out, i) => (
+                                  <span key={i} className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
+                                    {out}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {visit.productNames.length > 0 && (
+                              <p className="text-xs text-slate-500 truncate mb-1">
+                                📦 {visit.productNames.join(' • ')}
+                              </p>
+                            )}
+
+                            {visit.feedback && (
+                              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                {visit.feedback}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      )}
-
-                      {visit.productNames.length > 0 && (
-                        <p className="text-xs text-slate-500 truncate mb-1">
-                          📦 {visit.productNames.join(' • ')}
-                        </p>
-                      )}
-
-                      {visit.feedback && (
-                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                          {visit.feedback}
-                        </p>
-                      )}
+                      ))}
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

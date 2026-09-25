@@ -4,7 +4,6 @@ import { MoreVertical, Edit2, Archive, Trash2, RotateCcw, MapPin, Phone, Users }
 import type { Pharmacy } from '../models/pharmacy.model';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { usePharmacyStore } from '../hooks/usePharmacyStore';
-import { ShareLocationButton } from '@/modules/doctors/components/ShareLocationButton';
 import { cn } from '@/utils/cn';
 
 interface PharmacyCardProps {
@@ -130,24 +129,11 @@ export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
             )}
             {pharmacy.location && (
               <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">
-                <MapPin size={11} /> موقع محفوظ
+                <MapPin size={11} /> الموقع
               </span>
             )}
           </div>
         </div>
-
-        {/* Share Location Button */}
-        {pharmacy.location && (
-          <div className="px-3 pb-3 pt-1" onClick={e => e.stopPropagation()}>
-            <ShareLocationButton
-              location={pharmacy.location}
-              label={pharmacy.name}
-              address={pharmacy.address}
-              size="sm"
-              fullWidth
-            />
-          </div>
-        )}
       </div>
 
       <ConfirmDialog

@@ -69,10 +69,10 @@ export function DashboardPage() {
           <p className="text-xs text-slate-500 mb-1">طلبات قيد الانتظار</p>
           <p className="text-xl font-bold text-orange-600">{orderStats.pending}</p>
         </Link>
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-center">
+        <Link to="/planning" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-center hover:border-red-200 transition-colors">
           <p className="text-xs text-slate-500 mb-1">متابعات مطلوبة</p>
           <p className="text-xl font-bold text-red-600">{visitStats.pendingFollowUps}</p>
-        </div>
+        </Link>
       </section>
 
       {/* 3. Core Entities Shortcuts */}
