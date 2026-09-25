@@ -22,6 +22,7 @@ import { EditProductPage } from '@/modules/products/pages/EditProductPage';
 
 // Visits
 import { QuickEntryPage } from '@/modules/visits/pages/QuickEntryPage';
+import { EditVisitPage } from '@/modules/visits/pages/EditVisitPage';
 import { VisitListPage } from '@/modules/visits/pages/VisitListPage';
 import { VisitDetailPage } from '@/modules/visits/pages/VisitDetailPage';
 
@@ -43,6 +44,7 @@ import { EditCompoundPage } from '@/modules/compounds/pages/EditCompoundPage';
 import { PlanningPage } from '@/modules/planning/pages/PlanningPage';
 import { PlanBuilderPage } from '@/modules/planning/pages/PlanBuilderPage';
 import { PointCenterListPage } from '@/modules/pointCenters/pages/PointCenterListPage';
+import { PointCenterFormPage } from '@/modules/pointCenters/pages/PointCenterFormPage';
 
 // Zones
 import { ZoneListPage } from '@/modules/zones/pages/ZoneListPage';
@@ -85,6 +87,7 @@ export const router = createHashRouter([
       { path: 'quick-entry', element: <QuickEntryPage /> },
       { path: 'visits', element: <VisitListPage /> },
       { path: 'visits/:id', element: <VisitDetailPage /> },
+      { path: 'visits/:id/edit', element: <EditVisitPage /> },
       
       // Orders
       { path: 'orders', element: <OrderListPage /> },
@@ -100,6 +103,8 @@ export const router = createHashRouter([
 
       // Point Centers (NEW)
       { path: 'point-centers', element: <PointCenterListPage /> },
+      { path: 'point-centers/new', element: <PointCenterFormPage /> },
+      { path: 'point-centers/:id/edit', element: <PointCenterFormPage /> },
       
       // Planning (NEW)
       { path: 'planning', element: <PlanningPage /> },

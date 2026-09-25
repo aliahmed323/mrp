@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, Clock, Trash2, Package, CheckCircle2, MessageSquare, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Clock, Trash2, Package, CheckCircle2, MessageSquare, AlertCircle, Pencil } from 'lucide-react';
 import { getVisitById } from '@/services/storage/visitRepository';
 import { useVisitStore } from '../hooks/useVisitStore';
 import type { Visit } from '../models/visit.model';
@@ -47,9 +47,14 @@ export function VisitDetailPage() {
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50">
             <ArrowLeft size={18} />
           </button>
-          <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-600 hover:bg-red-50 hover:text-red-700">
-            <Trash2 size={14} /> حذف
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => navigate(`/visits/${visit.id}/edit`)} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+              <Pencil size={14} /> تعديل
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-600 hover:bg-red-50 hover:text-red-700">
+              <Trash2 size={14} /> حذف
+            </Button>
+          </div>
         </div>
 
         {/* Hero */}

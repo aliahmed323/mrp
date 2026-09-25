@@ -63,8 +63,8 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
   return (
     <div className="space-y-4">
       {/* 1. Type Selection */}
-      <div className="grid grid-cols-3 gap-2">
-        {(['doctor', 'pharmacy', 'clinic'] as VisitType[]).map(t => (
+      <div className="grid grid-cols-2 gap-2">
+        {(['doctor', 'pharmacy'] as VisitType[]).map(t => (
           <button
             key={t}
             type="button"

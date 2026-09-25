@@ -1,6 +1,10 @@
-import { Settings, Info, HardDrive, Database, Shield } from 'lucide-react';
+import { Settings, Info, HardDrive, Database, Shield, Moon } from 'lucide-react';
+import { useDarkMode } from '@/hooks/useDarkMode';
+import { cn } from '@/utils/cn';
 
 export function SettingsPage() {
+  const { isDark, setIsDark } = useDarkMode();
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto pb-8">
       <div className="flex items-center gap-3">
@@ -14,6 +18,26 @@ export function SettingsPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        {/* Dark Mode Toggle */}
+        <div 
+          onClick={() => setIsDark(!isDark)}
+          className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100"
+        >
+          <div className="flex items-center gap-4">
+            <Moon className={cn("transition-colors", isDark ? "text-indigo-500" : "text-slate-400")} size={20} />
+            <div>
+              <h3 className="font-semibold text-slate-800">الوضع الداكن</h3>
+              <p className="text-xs text-slate-500">تفعيل أو تعطيل المظهر الداكن للتطبيق</p>
+            </div>
+          </div>
+          <div className={cn(
+            "w-11 h-6 rounded-full transition-colors flex items-center px-1 shrink-0",
+            isDark ? "bg-indigo-600 justify-end" : "bg-slate-300 justify-start"
+          )}>
+            <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+          </div>
+        </div>
+
         <div className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100">
           <HardDrive className="text-slate-400" size={20} />
           <div>

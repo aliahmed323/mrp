@@ -50,6 +50,16 @@ export function PlanBuilderPage() {
     }
   };
 
+  const handleUncheckTask = (task: PlanTask) => {
+    if (task.status !== 'completed') return;
+    if (window.confirm('هل أنت متأكد من إزالة الزيارة وإعادتها كغير مكتملة؟ (ملاحظة: سيتم فك ارتباط الزيارة الفعلية بالمهمة)')) {
+      const newTasks = currentPlan.tasks.map(t => 
+        t.id === task.id ? { ...t, status: 'pending' as const, visitId: undefined } : t
+      );
+      updatePlanTasks(newTasks);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-20 h-[calc(100vh-80px)] flex flex-col">
       <div className="flex items-center justify-between shrink-0">
@@ -86,9 +96,16 @@ export function PlanBuilderPage() {
                   <GripVertical size={18} />
                 </button>
                 
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 text-transparent'}`}>
+                <button 
+                  onClick={e => { 
+                    e.stopPropagation(); 
+                    if (task.status === 'completed') handleUncheckTask(task); 
+                    else handleTaskClick(task); 
+                  }}
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white hover:bg-red-500 hover:border-red-500' : 'border-slate-300 text-transparent hover:border-slate-400'}`}
+                >
                   <CheckCircle size={14} />
-                </div>
+                </button>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between">

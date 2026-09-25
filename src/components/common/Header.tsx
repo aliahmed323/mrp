@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X, Stethoscope } from 'lucide-react';
+import { Search, X, Stethoscope } from 'lucide-react';
 import { useProductStore } from '@/modules/products/hooks/useProductStore';
 
 export function Header() {
@@ -63,13 +63,6 @@ export function Header() {
             aria-label="بحث"
           >
             {searchOpen ? <X size={18} /> : <Search size={18} />}
-          </button>
-          <button
-            onClick={() => navigate('/products/new')}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#0F52BA] text-white hover:bg-[#1d4ed8] transition-colors"
-            aria-label="إضافة منتج"
-          >
-            <Plus size={18} />
           </button>
         </div>
       </div>
