@@ -146,7 +146,7 @@ export function ReportsPage() {
         </div>
 
         {/* Report Viewer */}
-        <div className="flex-1 h-[400px] md:h-full flex flex-col min-h-0">
+        <div className="flex-1 h-[600px] md:h-full flex flex-col min-h-0">
           <ReportViewer reportText={reportText} />
         </div>
       </div>

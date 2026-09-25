@@ -9,6 +9,7 @@ import type { Pharmacy } from '@/modules/pharmacies/models/pharmacy.model';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/States';
 import { ConfirmDialog } from '@/components/ui/Dialog';
+import { AddEntityToZoneModal } from '../components/AddEntityToZoneModal';
 
 export function ZoneDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,10 @@ export function ZoneDetailPage() {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [tab, setTab] = useState<'compounds' | 'doctors' | 'pharmacies'>('compounds');
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalType, setAddModalType] = useState<'compound' | 'doctor' | 'pharmacy'>('compound');
 
-  useEffect(() => {
+  const loadData = () => {
     if (!id) return;
     Promise.all([
       getZoneById(id),
@@ -36,6 +39,10 @@ export function ZoneDetailPage() {
       setPharmacies(p);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadData();
   }, [id]);
 
   if (loading) return <LoadingState message="جارٍ تحميل المنطقة..." />;
@@ -116,19 +123,16 @@ export function ZoneDetailPage() {
 
         {/* Tab Content */}
         {tab === 'compounds' && (
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => { setAddModalType('compound'); setAddModalOpen(true); }}>
+                + إضافة مجمع موجود
+              </Button>
+            </div>
             {compounds.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
                 <Building2 size={32} className="text-slate-300 mx-auto mb-2" />
                 <p className="text-sm text-slate-500">لا توجد مجمعات في هذه المنطقة</p>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="mt-3"
-                  onClick={() => navigate('/compounds/new')}
-                >
-                  + إضافة مجمع
-                </Button>
               </div>
             ) : (
               compounds.map(c => (
@@ -154,7 +158,12 @@ export function ZoneDetailPage() {
         )}
 
         {tab === 'doctors' && (
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => { setAddModalType('doctor'); setAddModalOpen(true); }}>
+                + إضافة طبيب موجود
+              </Button>
+            </div>
             {doctors.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
                 <Users size={32} className="text-slate-300 mx-auto mb-2" />
@@ -184,7 +193,12 @@ export function ZoneDetailPage() {
         )}
 
         {tab === 'pharmacies' && (
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => { setAddModalType('pharmacy'); setAddModalOpen(true); }}>
+                + إضافة صيدلية موجودة
+              </Button>
+            </div>
             {pharmacies.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
                 <Pill size={32} className="text-slate-300 mx-auto mb-2" />
@@ -229,6 +243,14 @@ export function ZoneDetailPage() {
         message={`هل أنت متأكد من حذف منطقة "${zone.name}" نهائياً؟`}
         confirmLabel="حذف نهائياً"
         variant="danger"
+      />
+
+      <AddEntityToZoneModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        zoneId={zone.id}
+        entityType={addModalType}
+        onAdded={loadData}
       />
     </>
   );

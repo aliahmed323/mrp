@@ -62,6 +62,13 @@ export async function getPendingFollowUps(): Promise<Visit[]> {
     .then(arr => arr.sort((a, b) => (a.followUpDate || '').localeCompare(b.followUpDate || '')));
 }
 
+/** Get archived follow-ups */
+export async function getArchivedFollowUps(): Promise<Visit[]> {
+  return db.visits.filter(v => v.followUpRequired && !!v.isFollowUpCompleted)
+    .toArray()
+    .then(arr => arr.sort((a, b) => (b.followUpDate || '').localeCompare(a.followUpDate || '')));
+}
+
 /** Get visit stats */
 export async function getVisitStats() {
   const today = new Date().toISOString().split('T')[0];

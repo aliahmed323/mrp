@@ -240,13 +240,24 @@ export function PharmacyDetailPage() {
                 </p>
               </div>
             </div>
-            <ShareLocationButton
-              location={pharmacy.location}
-              label={pharmacy.name}
-              address={pharmacy.address}
-              size="lg"
-              fullWidth
-            />
+            <div className="flex gap-2">
+              <ShareLocationButton
+                location={pharmacy.location}
+                label={pharmacy.name}
+                address={pharmacy.address}
+                size="lg"
+                fullWidth
+              />
+              <Button 
+                variant="secondary" 
+                size="lg" 
+                className="shrink-0 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 px-4"
+                onClick={() => window.open(`waze://ul?ll=${pharmacy.location!.latitude},${pharmacy.location!.longitude}&navigate=yes`, '_blank')}
+                title="فتح في Waze"
+              >
+                🚗 Waze
+              </Button>
+            </div>
           </div>
         )}
 

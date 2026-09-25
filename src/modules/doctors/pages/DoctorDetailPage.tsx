@@ -179,7 +179,18 @@ export function DoctorDetailPage() {
                 <p className="text-sm font-mono text-slate-900" dir="ltr">{formatCoordinatesDisplay(doctor.location)}</p>
               </div>
             </div>
-            <ShareLocationButton location={doctor.location} label={doctor.name} address={doctor.area} size="lg" fullWidth />
+            <div className="flex gap-2">
+              <ShareLocationButton location={doctor.location} label={doctor.name} address={doctor.area} size="lg" fullWidth />
+              <Button 
+                variant="secondary" 
+                size="lg" 
+                className="shrink-0 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 px-4"
+                onClick={() => window.open(`waze://ul?ll=${doctor.location!.latitude},${doctor.location!.longitude}&navigate=yes`, '_blank')}
+                title="فتح في Waze"
+              >
+                🚗 Waze
+              </Button>
+            </div>
           </div>
         )}
 
