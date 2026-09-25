@@ -33,6 +33,7 @@ import { EditOrderPage } from '@/modules/orders/pages/EditOrderPage';
 
 // Other Modules
 import { ReportsPage } from '@/modules/reports/pages/ReportsPage';
+import { SettingsPage } from '@/modules/settings/pages/SettingsPage';
 
 // New Modules
 import { CompoundListPage } from '@/modules/compounds/pages/CompoundListPage';
@@ -40,6 +41,8 @@ import { CompoundDetailPage } from '@/modules/compounds/pages/CompoundDetailPage
 import { AddCompoundPage } from '@/modules/compounds/pages/AddCompoundPage';
 import { EditCompoundPage } from '@/modules/compounds/pages/EditCompoundPage';
 import { PlanningPage } from '@/modules/planning/pages/PlanningPage';
+import { PlanBuilderPage } from '@/modules/planning/pages/PlanBuilderPage';
+import { PointCenterListPage } from '@/modules/pointCenters/pages/PointCenterListPage';
 
 // Zones
 import { ZoneListPage } from '@/modules/zones/pages/ZoneListPage';
@@ -95,8 +98,12 @@ export const router = createHashRouter([
       { path: 'compounds/:id', element: <CompoundDetailPage /> },
       { path: 'compounds/:id/edit', element: <EditCompoundPage /> },
 
+      // Point Centers (NEW)
+      { path: 'point-centers', element: <PointCenterListPage /> },
+      
       // Planning (NEW)
       { path: 'planning', element: <PlanningPage /> },
+      { path: 'planning/build', element: <PlanBuilderPage /> },
 
       // Zones (NEW)
       { path: 'zones', element: <ZoneListPage /> },
@@ -112,6 +119,7 @@ export const router = createHashRouter([
       
       // Other
       { path: 'reports', element: <ReportsPage /> },
+      { path: 'settings', element: <SettingsPage /> },
       
       // Catch-all
       { path: '*', element: <Navigate to="/" replace /> },

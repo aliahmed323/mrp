@@ -68,11 +68,7 @@ export function PlanningPage() {
     setPlanText(text);
   };
 
-  const handleOpenShareModal = () => {
-    setPlanDate(todayStr);
-    generatePlanTextForDate(todayStr);
-    setShareModalOpen(true);
-  };
+
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value;
@@ -150,8 +146,8 @@ export function PlanningPage() {
             <p className="text-sm text-slate-500">نظّم متابعاتك وزياراتك القادمة</p>
           </div>
         </div>
-        <Button onClick={handleOpenShareModal} size="sm" variant="secondary" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3">
-          <Share2 size={14} /> بناء خطة
+        <Button onClick={() => navigate(`/planning/build?date=${todayStr}`)} size="sm" variant="secondary" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3">
+          <Calendar size={14} /> بناء خطة
         </Button>
       </div>
 
