@@ -41,6 +41,12 @@ import { AddCompoundPage } from '@/modules/compounds/pages/AddCompoundPage';
 import { EditCompoundPage } from '@/modules/compounds/pages/EditCompoundPage';
 import { PlanningPage } from '@/modules/planning/pages/PlanningPage';
 
+// Zones
+import { ZoneListPage } from '@/modules/zones/pages/ZoneListPage';
+import { ZoneDetailPage } from '@/modules/zones/pages/ZoneDetailPage';
+import { AddZonePage } from '@/modules/zones/pages/AddZonePage';
+import { EditZonePage } from '@/modules/zones/pages/EditZonePage';
+
 // Legacy Clinics
 import { ClinicListPage } from '@/modules/clinics/pages/ClinicListPage';
 import { ClinicDetailPage } from '@/modules/clinics/pages/ClinicDetailPage';
@@ -91,6 +97,12 @@ export const router = createHashRouter([
 
       // Planning (NEW)
       { path: 'planning', element: <PlanningPage /> },
+
+      // Zones (NEW)
+      { path: 'zones', element: <ZoneListPage /> },
+      { path: 'zones/new', element: <AddZonePage /> },
+      { path: 'zones/:id', element: <ZoneDetailPage /> },
+      { path: 'zones/:id/edit', element: <EditZonePage /> },
 
       // Legacy Clinics
       { path: 'clinics', element: <ClinicListPage /> },

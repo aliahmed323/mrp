@@ -71,10 +71,10 @@ export interface Doctor {
   updatedAt: string;
 
   // ── حقول جديدة ──────────────────────────────────────────────
-  loyaltyScore: number;           // الإخلاص 0-100
   attitude: DoctorAttitude;       // تقييم التعامل
-  residentialCompound: string;    // المجمع السكني للطبيب
-  compoundId?: string;            // FK → Compound (للتنظيم الجغرافي)
+  relationshipType: 'Dealer' | 'Dirty Dealer' | 'Scientific'; // تصنيف العلاقة
+  zoneId: string;                 // المنطقة الجغرافية
+  compoundIds: string[];          // FKs → Compound (للتنظيم الجغرافي)
   pharmacyIds: string[];          // صيدليات مرتبطة (many-to-many)
   clinics: DoctorClinic[];        // عيادات الطبيب (embedded)
 }

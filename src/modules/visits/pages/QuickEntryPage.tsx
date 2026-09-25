@@ -26,6 +26,7 @@ export function QuickEntryPage() {
   const [saveAsQuickResponse, setSaveAsQuickResponse] = useState(false);
   const [followUpRequired, setFollowUpRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
+  const [followUpPriority, setFollowUpPriority] = useState<'high' | 'medium' | 'low'>('medium');
 
   const now = new Date();
   // Default to today
@@ -65,6 +66,8 @@ export function QuickEntryPage() {
         productNames,
         followUpRequired,
         followUpDate: followUpRequired ? followUpDate : undefined,
+        followUpPriority: followUpRequired ? followUpPriority : undefined,
+        isFollowUpCompleted: false,
       });
 
       // 2. Increment usage for used preset outcomes
@@ -189,7 +192,7 @@ export function QuickEntryPage() {
               </label>
               
               {followUpRequired && (
-                <div className="pl-6 animate-in slide-in-from-top-2">
+                <div className="pl-6 space-y-3 animate-in slide-in-from-top-2">
                   <Input 
                     type="date" 
                     label="تاريخ المتابعة" 
@@ -197,6 +200,32 @@ export function QuickEntryPage() {
                     onChange={e => setFollowUpDate(e.target.value)}
                     leftIcon={<Calendar size={16} />}
                   />
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-500 mb-1.5 block">أولوية المتابعة</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFollowUpPriority('high')}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${followUpPriority === 'high' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        عاجلة (أحمر)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFollowUpPriority('medium')}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${followUpPriority === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        متوسطة (برتقالي)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFollowUpPriority('low')}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${followUpPriority === 'low' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        عادية (أخضر)
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

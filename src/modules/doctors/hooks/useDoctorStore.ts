@@ -78,8 +78,7 @@ export const useDoctorStore = create<DoctorState>((set, get) => ({
         const specialties = (d.specialties || []).join(' ');
         return d.name.toLowerCase().includes(q) ||
           specialties.toLowerCase().includes(q) ||
-          d.area.toLowerCase().includes(q) ||
-          (d.residentialCompound || '').toLowerCase().includes(q);
+          d.area.toLowerCase().includes(q);
       }
       return true;
     });

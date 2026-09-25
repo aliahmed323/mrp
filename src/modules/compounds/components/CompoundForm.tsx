@@ -1,15 +1,17 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Compound, CompoundFormData } from '../models/compound.model';
-import { Input, Textarea } from '@/components/ui/FormControls';
+import { Input, Textarea, Select } from '@/components/ui/FormControls';
 import { Button } from '@/components/ui/Button';
+import { useZoneStore } from '@/modules/zones/hooks/useZoneStore';
 
 const schema = z.object({
   name: z.string().min(2, 'اسم المجمع مطلوب'),
   area: z.string().default(''),
+  zoneId: z.string().default(''),
   description: z.string().default(''),
   notes: z.string().default(''),
   active: z.boolean().default(true),
@@ -47,12 +49,16 @@ interface CompoundFormProps {
 
 export function CompoundForm({ initialData, onSubmit, onCancel, submitLabel = 'حفظ' }: CompoundFormProps) {
   const [loading, setLoading] = useState(false);
+  const { zones, loadZones } = useZoneStore();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  useEffect(() => { loadZones(); }, [loadZones]);
+
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: initialData?.name ?? '',
       area: initialData?.area ?? '',
+      zoneId: initialData?.zoneId ?? '',
       description: initialData?.description ?? '',
       notes: initialData?.notes ?? '',
       active: initialData?.active ?? true,
@@ -76,6 +82,22 @@ export function CompoundForm({ initialData, onSubmit, onCancel, submitLabel = '�
         </FullWidth>
         <FullWidth>
           <Input label="المنطقة / الموقع" placeholder="مثال: حي الروضة، الرياض" {...register('area')} />
+        </FullWidth>
+        <FullWidth>
+          <Controller
+            name="zoneId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="🗺️ المنطقة الجغرافية"
+                options={[
+                  { value: '', label: 'بدون منطقة' },
+                  ...zones.filter(z => !z.archived).map(z => ({ value: z.id, label: z.name })),
+                ]}
+                {...field}
+              />
+            )}
+          />
         </FullWidth>
         <FullWidth>
           <Input label="وصف المجمع" placeholder="وصف مختصر عن المجمع" {...register('description')} />

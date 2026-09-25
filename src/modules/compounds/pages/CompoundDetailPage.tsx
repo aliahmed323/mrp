@@ -10,6 +10,8 @@ import { ConfirmDialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/States';
 
+import { AddEntityToCompoundModal } from '../components/AddEntityToCompoundModal';
+
 export function CompoundDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -23,7 +25,10 @@ export function CompoundDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalType, setAddModalType] = useState<'doctor' | 'pharmacy'>('doctor');
+
+  const loadData = () => {
     if (!id) return;
     Promise.all([
       getCompoundById(id),
@@ -35,6 +40,10 @@ export function CompoundDetailPage() {
       setPharmacies(p);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadData();
   }, [id]);
 
   if (loading) return <LoadingState message="جارٍ تحميل المجمع..." />;
@@ -115,7 +124,7 @@ export function CompoundDetailPage() {
             <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
               <Users size={16} className="text-blue-500" /> الأطباء في المجمع
             </h3>
-            <Button size="sm" variant="ghost" onClick={() => navigate('/doctors/new')}>
+            <Button size="sm" variant="ghost" onClick={() => { setAddModalType('doctor'); setAddModalOpen(true); }}>
               + إضافة
             </Button>
           </div>
@@ -144,7 +153,7 @@ export function CompoundDetailPage() {
             <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
               <Pill size={16} className="text-emerald-500" /> الصيدليات في المجمع
             </h3>
-            <Button size="sm" variant="ghost" onClick={() => navigate('/pharmacies/new')}>
+            <Button size="sm" variant="ghost" onClick={() => { setAddModalType('pharmacy'); setAddModalOpen(true); }}>
               + إضافة
             </Button>
           </div>
@@ -202,6 +211,15 @@ export function CompoundDetailPage() {
         confirmLabel="حذف نهائياً"
         variant="danger"
         loading={actionLoading}
+      />
+
+      <AddEntityToCompoundModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        compoundId={compound.id}
+        entityType={addModalType}
+        existingEntityIds={addModalType === 'doctor' ? doctors.map(d => d.id) : pharmacies.map(p => p.id)}
+        onAdded={loadData}
       />
     </>
   );

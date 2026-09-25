@@ -57,7 +57,7 @@ export async function getTodayVisits(): Promise<Visit[]> {
 
 /** Get pending follow-ups */
 export async function getPendingFollowUps(): Promise<Visit[]> {
-  return db.visits.filter(v => v.followUpRequired && (!v.followUpDate || v.followUpDate >= new Date().toISOString().split('T')[0]))
+  return db.visits.filter(v => v.followUpRequired && !v.isFollowUpCompleted)
     .toArray()
     .then(arr => arr.sort((a, b) => (a.followUpDate || '').localeCompare(b.followUpDate || '')));
 }

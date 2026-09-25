@@ -34,6 +34,8 @@ export interface Visit {
   productNames: string[];      // cached product names
   followUpRequired: boolean;
   followUpDate?: string;
+  followUpPriority?: 'high' | 'medium' | 'low'; // Red, Orange, Green
+  isFollowUpCompleted?: boolean;
   followUpNotes?: string;
   location?: GeoLocation;
   createdAt: string;

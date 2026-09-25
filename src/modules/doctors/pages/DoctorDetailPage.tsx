@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, Archive, Trash2, RotateCcw,
-  Phone, MapPin, Building2, Pill, Activity, CalendarDays, Heart
+  Phone, MapPin, Building2, Pill, Activity, CalendarDays
 } from 'lucide-react';
 import { getDoctorById, getDoctorClinics, getDoctorPharmacies, getDoctorVisits } from '@/services/storage/doctorRepository';
 import { useDoctorStore } from '../hooks/useDoctorStore';
@@ -133,12 +133,11 @@ export function DoctorDetailPage() {
                 {attitudeLabel}
               </span>
             </div>
-            {/* Loyalty */}
+            {/* Relationship Type */}
             <div className="bg-white px-3 py-3 text-center">
-              <p className="text-[10px] text-slate-500 mb-1">الإخلاص</p>
+              <p className="text-[10px] text-slate-500 mb-1">تصنيف العلاقة</p>
               <div className="flex items-center justify-center gap-1">
-                <Heart size={13} className="text-red-400 fill-red-400" />
-                <span className="text-sm font-bold text-slate-900">{doctor.loyaltyScore ?? 0}</span>
+                <span className="text-sm font-bold text-slate-900">{doctor.relationshipType}</span>
               </div>
             </div>
             {/* Visits */}
@@ -164,17 +163,6 @@ export function DoctorDetailPage() {
                 </a>
               </div>
             </div>
-            {doctor.residentialCompound && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
-                  <Building2 size={16} className="text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">المجمع السكني</p>
-                  <p className="text-sm font-medium text-slate-800">{doctor.residentialCompound}</p>
-                </div>
-              </div>
-            )}
           </div>
         )}
 

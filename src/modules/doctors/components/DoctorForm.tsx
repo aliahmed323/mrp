@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { LocationPicker } from './LocationPicker';
 import { useCompoundStore } from '@/modules/compounds/hooks/useCompoundStore';
 import { usePharmacyStore } from '@/modules/pharmacies/hooks/usePharmacyStore';
+import { useZoneStore } from '@/modules/zones/hooks/useZoneStore';
 import { cn } from '@/utils/cn';
 
 // ============================================================
@@ -31,10 +32,10 @@ const schema = z.object({
   phone: z.string().default(''),
   notes: z.string().default(''),
   active: z.boolean().default(true),
-  loyaltyScore: z.coerce.number().min(0).max(100).default(0),
   attitude: z.enum(['excellent', 'good', 'average', 'poor']).default('good'),
-  residentialCompound: z.string().default(''),
-  compoundId: z.string().default(''),
+  relationshipType: z.enum(['Dealer', 'Dirty Dealer', 'Scientific']).default('Scientific'),
+  zoneId: z.string().default(''),
+  compoundIds: z.array(z.string()).default([]),
   pharmacyIds: z.array(z.string()).default([]),
   clinics: z.array(clinicSchema).default([]),
 });
@@ -93,8 +94,9 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
 
   const { compounds, loadCompounds } = useCompoundStore();
   const { pharmacies, loadPharmacies } = usePharmacyStore();
+  const { zones, loadZones } = useZoneStore();
 
-  useEffect(() => { loadCompounds(); loadPharmacies(); }, [loadCompounds, loadPharmacies]);
+  useEffect(() => { loadCompounds(); loadPharmacies(); loadZones(); }, [loadCompounds, loadPharmacies, loadZones]);
 
   const defaultValues: FormValues = {
     name: initialData?.name ?? '',
@@ -103,10 +105,10 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
     phone: initialData?.phone ?? '',
     notes: initialData?.notes ?? '',
     active: initialData?.active ?? true,
-    loyaltyScore: initialData?.loyaltyScore ?? 0,
     attitude: (initialData?.attitude as DoctorAttitude) ?? 'good',
-    residentialCompound: initialData?.residentialCompound ?? '',
-    compoundId: initialData?.compoundId ?? '',
+    relationshipType: initialData?.relationshipType ?? 'Scientific',
+    zoneId: initialData?.zoneId ?? '',
+    compoundIds: initialData?.compoundIds ?? [],
     pharmacyIds: initialData?.pharmacyIds ?? [],
     clinics: initialData?.clinics ?? [],
   };
@@ -118,11 +120,6 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
 
   const selectedSpecialties = watch('specialties');
   const selectedPharmacyIds = watch('pharmacyIds');
-
-  const compoundOptions = [
-    { value: '', label: 'بدون مجمع' },
-    ...compounds.filter(c => !c.archived).map(c => ({ value: c.id, label: c.name })),
-  ];
 
   const activePharmacies = pharmacies.filter(p => !p.archived);
 
@@ -137,10 +134,10 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
         notes: values.notes ?? '',
         location: locationValue,
         active: values.active,
-        loyaltyScore: values.loyaltyScore,
         attitude: values.attitude,
-        residentialCompound: values.residentialCompound ?? '',
-        compoundId: values.compoundId || undefined,
+        relationshipType: values.relationshipType,
+        zoneId: values.zoneId ?? '',
+        compoundIds: values.compoundIds,
         pharmacyIds: values.pharmacyIds,
         clinics,
       };
@@ -156,6 +153,16 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
       setValue('specialties', current.filter(x => x !== s));
     } else {
       setValue('specialties', [...current, s]);
+    }
+  };
+
+  const selectedCompoundIds = watch('compoundIds');
+  const toggleCompound = (c: string) => {
+    const current = selectedCompoundIds ?? [];
+    if (current.includes(c)) {
+      setValue('compoundIds', current.filter(x => x !== c));
+    } else {
+      setValue('compoundIds', [...current, c]);
     }
   };
 
@@ -207,9 +214,6 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
         <FullWidth>
           <Input label="المنطقة / العنوان" placeholder="المنطقة / الشارع" {...register('area')} />
         </FullWidth>
-        <FullWidth>
-          <Input label="المجمع السكني (مكان الإقامة)" placeholder="مجمع الأمل، حي النرجس..." {...register('residentialCompound')} />
-        </FullWidth>
       </Section>
 
       {/* 2. Specialties – Multi Select */}
@@ -249,7 +253,7 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
       </Section>
 
       {/* 3. Doctor Rating */}
-      <Section title="⭐ التقييم والإخلاص">
+      <Section title="⭐ تصنيف الطبيب">
         <Controller
           name="attitude"
           control={control}
@@ -261,42 +265,74 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
             />
           )}
         />
-        <div className="space-y-1">
-          <label className="block text-xs font-semibold text-slate-700">
-            درجة الإخلاص: <span className="text-blue-600 font-bold">{watch('loyaltyScore')}/100</span>
-          </label>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={5}
-            {...register('loyaltyScore')}
-            className="w-full accent-blue-600"
-          />
-          <div className="flex justify-between text-[10px] text-slate-400">
-            <span>منخفض</span>
-            <span>متوسط</span>
-            <span>مرتفع</span>
-          </div>
-        </div>
+        <Controller
+          name="relationshipType"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="تصنيف العلاقة (Relationship Type)"
+              options={[
+                { value: 'Scientific', label: 'Scientific' },
+                { value: 'Dealer', label: 'Dealer' },
+                { value: 'Dirty Dealer', label: 'Dirty Dealer' }
+              ]}
+              {...field}
+            />
+          )}
+        />
       </Section>
 
-      {/* 4. Compound */}
-      <Section title="🏘️ المجمع التنظيمي">
+      {/* 4. Zone */}
+      <Section title="🗺️ المنطقة الجغرافية">
         <FullWidth>
           <Controller
-            name="compoundId"
+            name="zoneId"
             control={control}
             render={({ field }) => (
               <Select
-                label="المجمع (للتنظيم الجغرافي)"
-                options={compoundOptions}
-                placeholder="اختر مجمعاً..."
+                label="المنطقة"
+                options={[
+                  { value: '', label: 'بدون منطقة' },
+                  ...zones.filter(z => !z.archived).map(z => ({ value: z.id, label: z.name })),
+                ]}
                 {...field}
               />
             )}
           />
-          <p className="text-[11px] text-slate-400 mt-1">يمكن إضافة مجمعات جديدة من قائمة المجمعات</p>
+          <p className="text-[11px] text-slate-400 mt-1">يمكن إضافة مناطق جديدة من قائمة المناطق</p>
+        </FullWidth>
+      </Section>
+
+      {/* 5. Compounds */}
+      <Section title="🏘️ المجمعات التنظيمية">
+        <FullWidth>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-slate-700">اختر مجمعاً أو أكثر</p>
+            <div className="flex flex-wrap gap-2">
+              {compounds.filter(c => !c.archived).map(c => {
+                const selected = (selectedCompoundIds ?? []).includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => toggleCompound(c.id)}
+                    className={cn(
+                      'text-xs px-3 py-1.5 rounded-full border font-medium transition-colors',
+                      selected
+                        ? 'bg-purple-600 text-white border-purple-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-purple-300 hover:text-purple-600'
+                    )}
+                  >
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+            {compounds.filter(c => !c.archived).length === 0 && (
+              <p className="text-xs text-slate-400">لا توجد مجمعات مسجلة</p>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2">يمكن إضافة مجمعات جديدة من قائمة المجمعات</p>
         </FullWidth>
       </Section>
 

@@ -7,6 +7,7 @@ export interface Compound {
   id: string;
   name: string;        // اسم المجمع
   area: string;        // المنطقة
+  zoneId: string;      // المنطقة الجغرافية
   description: string; // وصف إضافي
   notes: string;
   active: boolean;

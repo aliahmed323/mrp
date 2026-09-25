@@ -24,7 +24,7 @@ export function PharmacyDetailPage() {
 
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [compound, setCompound] = useState<Compound | null>(null);
+  const [compounds, setCompounds] = useState<Compound[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -42,10 +42,11 @@ export function PharmacyDetailPage() {
           const docs = await Promise.all(docIds.map(docId => getDoctorById(docId)));
           setDoctors(docs.filter(d => d !== undefined) as Doctor[]);
         }
-        // Fetch compound
-        if (p.compoundId) {
-          const c = await getCompoundById(p.compoundId);
-          setCompound(c ?? null);
+        // Fetch compounds
+        const compIds = p.compoundIds || [];
+        if (compIds.length > 0) {
+          const comps = await Promise.all(compIds.map(compId => getCompoundById(compId)));
+          setCompounds(comps.filter(c => c !== undefined) as Compound[]);
         }
       }
       setLoading(false);
@@ -110,20 +111,24 @@ export function PharmacyDetailPage() {
           </div>
         </div>
         
-        {/* Compound Link */}
-        {compound && (
-          <Link to={`/compounds/${compound.id}`} className="bg-white rounded-2xl border border-purple-100 shadow-sm p-4 flex items-center justify-between hover:bg-purple-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                <Building2 size={16} className="text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">المجمع التنظيمي</p>
-                <p className="text-sm font-bold text-purple-700">{compound.name}</p>
-              </div>
-            </div>
-            <ArrowLeft size={16} className="text-purple-400" />
-          </Link>
+        {/* Compound Links */}
+        {compounds.length > 0 && (
+          <div className="space-y-2">
+            {compounds.map(compound => (
+              <Link key={compound.id} to={`/compounds/${compound.id}`} className="bg-white rounded-2xl border border-purple-100 shadow-sm p-4 flex items-center justify-between hover:bg-purple-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                    <Building2 size={16} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">المجمع التنظيمي</p>
+                    <p className="text-sm font-bold text-purple-700">{compound.name}</p>
+                  </div>
+                </div>
+                <ArrowLeft size={16} className="text-purple-400" />
+              </Link>
+            ))}
+          </div>
         )}
 
         {/* Doctor Links */}

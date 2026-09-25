@@ -29,7 +29,8 @@ export interface Pharmacy {
   updatedAt: string;
 
   // ── حقول جديدة: معلومات المسؤولين ───────────────────────────
-  compoundId?: string;              // FK → Compound
+  zoneId: string;                 // المنطقة الجغرافية
+  compoundIds: string[];              // FKs → Compound
 
   // صاحب الصيدلية
   ownerName: string;

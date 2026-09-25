@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Pill, Stethoscope, 
   PlusCircle, FileText, ShoppingBag, Settings,
-  MoreHorizontal, CalendarDays, Navigation as NavIcon, Building2
+  MoreHorizontal, CalendarDays, Navigation as NavIcon, Building2, MapPin
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -19,7 +19,8 @@ const MAIN_NAV_ITEMS = [
 ];
 
 const MORE_NAV_ITEMS = [
-  { path: '/planning', label: 'التخطيط', icon: NavIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { path: '/zones', label: 'المناطق', icon: MapPin, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { path: '/planning', label: 'التخطيط', icon: NavIcon, color: 'text-violet-600', bg: 'bg-violet-50' },
   { path: '/pharmacies', label: 'الصيدليات', icon: Pill, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { path: '/compounds', label: 'المجمعات', icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50' },
   { path: '/visits', label: 'الزيارات', icon: CalendarDays, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -203,6 +204,9 @@ export function SideNav() {
             </NavLink>
             <NavLink to="/pharmacies" className={navLinkClass}>
               <Pill size={20} /> الصيدليات
+            </NavLink>
+            <NavLink to="/zones" className={navLinkClass}>
+              <MapPin size={20} /> المناطق
             </NavLink>
             <NavLink to="/compounds" className={navLinkClass}>
               <Building2 size={20} /> المجمعات

@@ -7,6 +7,7 @@ import type { Visit } from '@/modules/visits/models/visit.model';
 import type { QuickResponse } from '@/modules/visits/models/quickResponse.model';
 import type { Order } from '@/modules/orders/models/order.model';
 import type { Compound } from '@/modules/compounds/models/compound.model';
+import type { Zone } from '@/modules/zones/models/zone.model';
 
 // ============================================================
 // Database Schema – Field Sales Second Brain
@@ -21,6 +22,7 @@ class MedRepDatabase extends Dexie {
   quickResponses!: Table<QuickResponse>;
   orders!: Table<Order>;
   compounds!: Table<Compound>;
+  zones!: Table<Zone>;
 
   constructor() {
     super('MedRepDB');
@@ -146,6 +148,110 @@ class MedRepDatabase extends Dexie {
         }
         if (!product.packagingType) product.packagingType = 'strips';
         if (!product.unitsPerPackage) product.unitsPerPackage = product.stripsPerBox || 1;
+      });
+    });
+
+    // v5: Doctor classification phase 1 + Compound many-to-many
+    this.version(5).stores({
+      products: [
+        'id', 'productName', 'company', 'category',
+        'active', 'archived', 'expiryDate', 'createdAt', 'updatedAt',
+      ].join(', '),
+      doctors: [
+        'id', 'name', 'area', '*compoundIds',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      pharmacies: [
+        'id', 'name', 'ownership', '*doctorIds', '*compoundIds',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      clinics: [
+        'id', 'name', 'doctorId',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      visits: [
+        'id', 'type', 'entityId', 'doctorId', 'date',
+        'followUpRequired', 'followUpDate', 'createdAt',
+      ].join(', '),
+      quickResponses: [
+        'id', 'text', 'category', 'isPreset', 'usageCount', 'active', 'createdAt',
+      ].join(', '),
+      orders: [
+        'id', 'pharmacyId', 'doctorId', 'productId',
+        'status', 'orderDate', 'followUpDate', 'createdAt',
+      ].join(', '),
+      compounds: [
+        'id', 'name', 'area',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+    }).upgrade(async tx => {
+      // Migrate doctors
+      await tx.table('doctors').toCollection().modify((doctor: any) => {
+        delete doctor.loyaltyScore;
+        delete doctor.residentialCompound;
+        if (!doctor.relationshipType) doctor.relationshipType = 'Scientific';
+        if (!doctor.compoundIds) {
+          doctor.compoundIds = doctor.compoundId ? [doctor.compoundId] : [];
+        }
+        delete doctor.compoundId;
+      });
+
+      // Migrate pharmacies
+      await tx.table('pharmacies').toCollection().modify((pharmacy: any) => {
+        if (!pharmacy.compoundIds) {
+          pharmacy.compoundIds = pharmacy.compoundId ? [pharmacy.compoundId] : [];
+        }
+        delete pharmacy.compoundId;
+      });
+    });
+
+    // v6: Zone System
+    this.version(6).stores({
+      products: [
+        'id', 'productName', 'company', 'category',
+        'active', 'archived', 'expiryDate', 'createdAt', 'updatedAt',
+      ].join(', '),
+      doctors: [
+        'id', 'name', 'area', 'zoneId', '*compoundIds',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      pharmacies: [
+        'id', 'name', 'ownership', 'zoneId', '*doctorIds', '*compoundIds',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      clinics: [
+        'id', 'name', 'doctorId',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      visits: [
+        'id', 'type', 'entityId', 'doctorId', 'date',
+        'followUpRequired', 'followUpDate', 'createdAt',
+      ].join(', '),
+      quickResponses: [
+        'id', 'text', 'category', 'isPreset', 'usageCount', 'active', 'createdAt',
+      ].join(', '),
+      orders: [
+        'id', 'pharmacyId', 'doctorId', 'productId',
+        'status', 'orderDate', 'followUpDate', 'createdAt',
+      ].join(', '),
+      compounds: [
+        'id', 'name', 'area', 'zoneId',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+      zones: [
+        'id', 'name',
+        'active', 'archived', 'createdAt', 'updatedAt',
+      ].join(', '),
+    }).upgrade(async tx => {
+      // Initialize zoneId for existing doctors, pharmacies, compounds
+      await tx.table('doctors').toCollection().modify((doc: any) => {
+        if (!doc.zoneId) doc.zoneId = '';
+      });
+      await tx.table('pharmacies').toCollection().modify((ph: any) => {
+        if (!ph.zoneId) ph.zoneId = '';
+      });
+      await tx.table('compounds').toCollection().modify((c: any) => {
+        if (!c.zoneId) c.zoneId = '';
       });
     });
   }

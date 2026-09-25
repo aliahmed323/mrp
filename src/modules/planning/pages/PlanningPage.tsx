@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Clock, AlertCircle, Navigation } from 'lucide-react';
-import { getVisitsByDateRange } from '@/services/storage/visitRepository';
+import { Clock, Navigation, Circle, Calendar } from 'lucide-react';
+import { getPendingFollowUps, updateVisit } from '@/services/storage/visitRepository';
 import type { Visit } from '@/modules/visits/models/visit.model';
 import { LoadingState, EmptyState } from '@/components/ui/States';
 import { Button } from '@/components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/cn';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
-type TabType = 'today' | 'tomorrow' | 'followup';
+type TabType = 'today' | 'upcoming' | 'pending';
 
 export function PlanningPage() {
   const navigate = useNavigate();
@@ -17,25 +18,33 @@ export function PlanningPage() {
   const [loading, setLoading] = useState(true);
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const tomorrowStr = format(addDays(new Date(), 1), 'yyyy-MM-dd');
-  const weekLaterStr = format(addDays(new Date(), 7), 'yyyy-MM-dd');
+
+  const loadData = async () => {
+    setLoading(true);
+    const pending = await getPendingFollowUps();
+    setVisits(pending);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // Fetch a wide range of visits to filter client side for now
-    getVisitsByDateRange('2020-01-01', weekLaterStr).then(v => {
-      setVisits(v);
-      setLoading(false);
-    });
-  }, [weekLaterStr]);
+    loadData();
+  }, []);
+
+  const handleToggleComplete = async (visit: Visit) => {
+    await updateVisit(visit.id, { isFollowUpCompleted: true });
+    // Optimistic update
+    setVisits(prev => prev.filter(v => v.id !== visit.id));
+  };
 
   const getFilteredData = () => {
     switch (activeTab) {
       case 'today':
-        return visits.filter(v => v.followUpDate === todayStr || v.date === todayStr); // Simplification: showing visits made today or followups due today
-      case 'tomorrow':
-        return visits.filter(v => v.followUpDate === tomorrowStr);
-      case 'followup':
-        return visits.filter(v => v.followUpRequired && !v.followUpDate); // Followups without specific date
+        return visits.filter(v => v.followUpDate === todayStr);
+      case 'upcoming':
+        return visits.filter(v => v.followUpDate && v.followUpDate > todayStr);
+      case 'pending':
+        // Overdue or no date specified
+        return visits.filter(v => !v.followUpDate || v.followUpDate < todayStr);
       default:
         return [];
     }
@@ -43,18 +52,37 @@ export function PlanningPage() {
 
   const filteredVisits = getFilteredData();
 
-  if (loading) return <LoadingState message="جارٍ تحميل الخطة..." />;
+  // Helper for priority color
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-50 border-red-200 text-red-700';
+      case 'medium': return 'bg-orange-50 border-orange-200 text-orange-700';
+      case 'low': return 'bg-emerald-50 border-emerald-200 text-emerald-700';
+      default: return 'bg-slate-50 border-slate-200 text-slate-700';
+    }
+  };
+
+  const getPriorityLabel = (priority?: string) => {
+    switch (priority) {
+      case 'high': return 'عاجلة';
+      case 'medium': return 'متوسطة';
+      case 'low': return 'عادية';
+      default: return 'غير محدد';
+    }
+  };
+
+  if (loading) return <LoadingState message="جارٍ تحميل خطة العمل..." />;
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-8 h-[calc(100vh-80px)] flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 shrink-0">
-        <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-          <Navigation size={20} />
+        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <Navigation size={24} className="fill-current" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-900">بوابة التخطيط والمتابعة</h2>
-          <p className="text-xs text-slate-500">خطة العمل، المهام والمتابعات</p>
+          <h2 className="text-xl font-bold text-slate-900">قائمة المهام والتخطيط</h2>
+          <p className="text-sm text-slate-500">نظّم متابعاتك وزياراتك القادمة</p>
         </div>
       </div>
 
@@ -63,29 +91,29 @@ export function PlanningPage() {
         <button
           onClick={() => setActiveTab('today')}
           className={cn(
-            'flex-1 text-sm py-2 rounded-lg transition-colors font-medium',
+            'flex-1 text-sm py-2.5 rounded-lg transition-colors font-bold',
             activeTab === 'today' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:bg-slate-100'
           )}
         >
-          اليوم
+          متابعات اليوم
         </button>
         <button
-          onClick={() => setActiveTab('tomorrow')}
+          onClick={() => setActiveTab('upcoming')}
           className={cn(
-            'flex-1 text-sm py-2 rounded-lg transition-colors font-medium',
-            activeTab === 'tomorrow' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:bg-slate-100'
+            'flex-1 text-sm py-2.5 rounded-lg transition-colors font-bold',
+            activeTab === 'upcoming' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:bg-slate-100'
           )}
         >
-          غداً
+          متابعات قادمة
         </button>
         <button
-          onClick={() => setActiveTab('followup')}
+          onClick={() => setActiveTab('pending')}
           className={cn(
-            'flex-1 text-sm py-2 rounded-lg transition-colors font-medium',
-            activeTab === 'followup' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:bg-slate-100'
+            'flex-1 text-sm py-2.5 rounded-lg transition-colors font-bold',
+            activeTab === 'pending' ? 'bg-white shadow-sm text-red-600' : 'text-slate-600 hover:bg-slate-100'
           )}
         >
-          متابعات معلقة
+          متابعات متأخرة
         </button>
       </div>
 
@@ -94,37 +122,70 @@ export function PlanningPage() {
         {filteredVisits.length === 0 ? (
           <EmptyState
             title="لا توجد مهام"
-            description="ليس لديك أي متابعات أو خطط مبرمجة لهذه الفترة."
+            description="ليس لديك أي متابعات في هذه القائمة. عمل رائع!"
           />
         ) : (
           <div className="space-y-3">
             {filteredVisits.map(visit => (
-              <div key={visit.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+              <div 
+                key={visit.id} 
+                className={cn(
+                  "p-4 rounded-2xl border shadow-sm flex flex-col sm:flex-row sm:items-start gap-4 transition-all hover:shadow-md",
+                  getPriorityColor(visit.followUpPriority)
+                )}
+              >
+                {/* Checkbox Action */}
+                <button 
+                  onClick={() => handleToggleComplete(visit)}
+                  className="mt-1 shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity"
+                  title="تحديد كمكتملة"
+                >
+                  <Circle size={24} />
+                </button>
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-current border border-current/20">
                       {visit.type === 'doctor' ? 'طبيب' : visit.type === 'pharmacy' ? 'صيدلية' : 'عيادة'}
                     </span>
-                    <h3 className="text-sm font-bold text-slate-900 truncate">{visit.entityName}</h3>
+                    <h3 className="text-base font-bold truncate">{visit.entityName}</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/60 text-current mr-auto">
+                      {getPriorityLabel(visit.followUpPriority)}
+                    </span>
                   </div>
                   
-                  {visit.followUpNotes && (
-                    <p className="text-sm text-slate-600 mt-2 bg-amber-50/50 p-2 rounded-lg border border-amber-100 flex items-start gap-2">
-                      <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                  {visit.followUpNotes ? (
+                    <p className="text-sm mt-2 opacity-90 font-medium">
                       {visit.followUpNotes}
+                    </p>
+                  ) : (
+                    <p className="text-sm mt-2 opacity-90 font-medium">
+                      متابعة عامة
                     </p>
                   )}
                   
-                  {!visit.followUpNotes && (
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                      <Clock size={12} /> بحاجة لمتابعة
-                    </p>
-                  )}
+                  <div className="flex items-center gap-4 mt-3 text-xs opacity-75 font-semibold">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={14} /> 
+                      {visit.followUpDate 
+                        ? format(new Date(visit.followUpDate), 'EEEE, d MMMM', { locale: ar })
+                        : 'بدون تاريخ'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={14} /> 
+                      من زيارة: {visit.date}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="flex sm:flex-col gap-2 shrink-0">
-                  <Button size="sm" onClick={() => navigate(`/visits/${visit.id}`)}>
-                    عرض الزيارة السابقة
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    className="bg-white/60 hover:bg-white text-current border-current/20"
+                    onClick={() => navigate(`/visits/${visit.id}`)}
+                  >
+                    تفاصيل الزيارة
                   </Button>
                 </div>
               </div>

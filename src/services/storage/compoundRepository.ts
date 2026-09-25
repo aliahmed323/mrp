@@ -55,10 +55,10 @@ export async function deleteCompound(id: string): Promise<void> {
 
 /** Get all doctors belonging to a compound */
 export async function getCompoundDoctors(compoundId: string) {
-  return db.doctors.where('compoundId').equals(compoundId).toArray();
+  return db.doctors.where('compoundIds').equals(compoundId).toArray();
 }
 
 /** Get all pharmacies belonging to a compound */
 export async function getCompoundPharmacies(compoundId: string) {
-  return db.pharmacies.where('compoundId').equals(compoundId).toArray();
+  return db.pharmacies.where('compoundIds').equals(compoundId).toArray();
 }
