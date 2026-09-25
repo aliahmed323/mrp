@@ -62,7 +62,7 @@ export function ReportsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-8 h-[calc(100vh-80px)] flex flex-col">
+    <div className="max-w-4xl mx-auto space-y-4 pb-8 min-h-[calc(100vh-80px)] flex flex-col">
       <div className="flex items-center gap-3 shrink-0">
         <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
           <FileText size={20} />
@@ -73,9 +73,9 @@ export function ReportsPage() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
+      <div className="flex flex-col md:flex-row gap-4 flex-1">
         {/* Controls Sidebar - Changed to flex-col on mobile, sticky on desktop */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 w-full md:w-80 shrink-0 md:overflow-y-auto h-fit">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 w-full md:w-80 shrink-0 md:sticky md:top-24 h-fit">
           <div>
             <Input 
               label="اسم المندوب (يظهر في التقرير)" 
@@ -146,7 +146,7 @@ export function ReportsPage() {
         </div>
 
         {/* Report Viewer */}
-        <div className="flex-1 h-[600px] md:h-full flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-[80vh]">
           <ReportViewer reportText={reportText} />
         </div>
       </div>

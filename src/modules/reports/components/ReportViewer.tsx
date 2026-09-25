@@ -59,7 +59,7 @@ export function ReportViewer({ reportText }: ReportViewerProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-slate-50 shrink-0">
         <span className="text-sm font-semibold text-slate-700 px-2">التقرير المُنشأ</span>
@@ -85,7 +85,7 @@ export function ReportViewer({ reportText }: ReportViewerProps) {
       </div>
 
       {/* Report Content — Large, RTL, Editable */}
-      <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50 min-h-0">
+      <div className="flex-1 p-4 bg-slate-50/50">
         {editMode ? (
           <textarea
             className="w-full h-full min-h-[80vh] p-4 text-base sm:text-lg leading-relaxed bg-white rounded-xl border border-amber-200 outline-none resize-y text-slate-800"

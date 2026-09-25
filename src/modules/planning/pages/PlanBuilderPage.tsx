@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, CheckCircle, GripVertical, Trash2, CalendarDays } from 'lucide-react';
 import { usePlanStore } from '../hooks/usePlanStore';
@@ -6,6 +6,7 @@ import type { PlanTask } from '../models/plan.model';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/States';
 import { format } from 'date-fns';
+import { AddTaskModal } from '../components/AddTaskModal';
 
 export function PlanBuilderPage() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export function PlanBuilderPage() {
   const dateParam = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd');
   
   const { currentPlan, loading, loadPlanForDate, updatePlanTasks, markPlanCompleted } = usePlanStore();
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     loadPlanForDate(dateParam);
@@ -24,7 +26,7 @@ export function PlanBuilderPage() {
 
   const handleFinishPlan = async () => {
     await markPlanCompleted();
-    navigate('/reports'); // as user requested
+    navigate('/reports');
   };
 
   const removeTask = (taskId: string) => {
@@ -32,11 +34,20 @@ export function PlanBuilderPage() {
     updatePlanTasks(newTasks);
   };
 
-  const toggleTaskStatus = (taskId: string) => {
-    const newTasks = currentPlan.tasks.map(t => 
-      t.id === taskId ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' } as PlanTask : t
-    );
-    updatePlanTasks(newTasks);
+  const handleAddTask = (taskData: Omit<PlanTask, 'id'>) => {
+    const newTask: PlanTask = {
+      ...taskData,
+      id: crypto.randomUUID()
+    };
+    updatePlanTasks([...currentPlan.tasks, newTask]);
+  };
+
+  const handleTaskClick = (task: PlanTask) => {
+    if (task.status === 'completed' && task.visitId) {
+      navigate(`/visits/${task.visitId}`);
+    } else {
+      navigate(`/quick-entry?planTaskId=${task.id}&entityId=${task.entityId}&type=${task.type}&date=${dateParam}`);
+    }
   };
 
   return (
@@ -66,12 +77,18 @@ export function PlanBuilderPage() {
         ) : (
           <div className="space-y-2">
             {currentPlan.tasks.map((task) => (
-              <div key={task.id} className={`flex items-center gap-3 p-3 bg-white rounded-xl border ${task.status === 'completed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200'} shadow-sm`}>
-                <button className="text-slate-400 cursor-grab active:cursor-grabbing hover:text-slate-600"><GripVertical size={18} /></button>
-                
-                <button onClick={() => toggleTaskStatus(task.id)} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 text-transparent hover:border-slate-400'}`}>
-                  <CheckCircle size={14} />
+              <div 
+                key={task.id} 
+                className={`flex items-center gap-3 p-3 bg-white rounded-xl border ${task.status === 'completed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 hover:border-blue-300 hover:shadow-md cursor-pointer'} shadow-sm transition-all`}
+                onClick={() => handleTaskClick(task)}
+              >
+                <button onClick={e => e.stopPropagation()} className="text-slate-400 cursor-grab active:cursor-grabbing hover:text-slate-600">
+                  <GripVertical size={18} />
                 </button>
+                
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 text-transparent'}`}>
+                  <CheckCircle size={14} />
+                </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between">
@@ -82,7 +99,7 @@ export function PlanBuilderPage() {
                   {task.notes && <p className="text-[11px] text-slate-400 mt-1">{task.notes}</p>}
                 </div>
 
-                <button onClick={() => removeTask(task.id)} className="text-red-400 hover:text-red-600 p-2 shrink-0">
+                <button onClick={e => { e.stopPropagation(); removeTask(task.id); }} className="text-red-400 hover:text-red-600 p-2 shrink-0">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -92,12 +109,16 @@ export function PlanBuilderPage() {
       </div>
 
       <div className="shrink-0 pt-3 border-t border-slate-200">
-        <Button variant="secondary" fullWidth className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 border-dashed">
+        <Button onClick={() => setIsAdding(true)} variant="secondary" fullWidth className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 border-dashed">
           <Plus size={18} /> إضافة مهمة / زيارة جديدة
         </Button>
       </div>
       
-      {/* TODO: Add Task Modal */}
+      <AddTaskModal 
+        isOpen={isAdding} 
+        onClose={() => setIsAdding(false)} 
+        onAdd={handleAddTask} 
+      />
     </div>
   );
 }

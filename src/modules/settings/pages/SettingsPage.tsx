@@ -43,7 +43,7 @@ export function SettingsPage() {
           <p className="font-bold text-slate-600">MedRep 360</p>
           <p className="text-sm">المساعد الذكي للمندوب</p>
           <div className="mt-2 inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold font-mono border border-blue-100">
-            Version 2.0.0
+            Version 3.0.0
           </div>
         </div>
       </div>

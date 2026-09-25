@@ -26,6 +26,10 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
     loadClinics();
   }, [loadDoctors, loadPharmacies, loadClinics]);
 
+  useEffect(() => {
+    if (value) setType(value.type);
+  }, [value]);
+
   // Handle type change
   const handleTypeChange = (newType: VisitType) => {
     setType(newType);

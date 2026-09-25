@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Zap, Clock, CalendarDays, Calendar } from 'lucide-react';
 import { EntitySelector } from '../components/EntitySelector';
 import { OutcomeChips } from '../components/OutcomeChips';
@@ -11,9 +11,18 @@ import { createQuickResponse } from '@/services/storage/quickResponseRepository'
 import type { VisitType } from '../models/visit.model';
 import toast from 'react-hot-toast';
 import { Input } from '@/components/ui/FormControls';
+import { getDoctorById } from '@/services/storage/doctorRepository';
+import { getPharmacyById } from '@/services/storage/pharmacyRepository';
+import { getPlanByDate, updatePlan } from '@/services/storage/planRepository';
 
 export function QuickEntryPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planTaskId = searchParams.get('planTaskId');
+  const planEntityId = searchParams.get('entityId');
+  const planType = searchParams.get('type') as VisitType;
+  const planDateParam = searchParams.get('date');
+
   const { addVisit } = useVisitStore();
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +48,21 @@ export function QuickEntryPage() {
   const [date, setDate] = useState(defaultDate);
   const [time, setTime] = useState(defaultTime);
 
+  useEffect(() => {
+    const fetchPlanEntity = async () => {
+      if (planTaskId && planEntityId && planType) {
+        if (planType === 'doctor') {
+          const d = await getDoctorById(planEntityId);
+          if (d) setEntity({ type: 'doctor', id: d.id, name: d.name });
+        } else if (planType === 'pharmacy') {
+          const p = await getPharmacyById(planEntityId);
+          if (p) setEntity({ type: 'pharmacy', id: p.id, name: p.name, doctorId: p.doctorId, doctorName: p.doctorName });
+        }
+      }
+    };
+    fetchPlanEntity();
+  }, [planTaskId, planEntityId, planType]);
+
   const handleSave = async () => {
     if (!entity) {
       toast.error('الرجاء اختيار الوجهة');
@@ -52,7 +76,7 @@ export function QuickEntryPage() {
     setLoading(true);
     try {
       // 1. Save Visit
-      await addVisit({
+      const newVisit = await addVisit({
         type: entity.type,
         entityId: entity.id,
         entityName: entity.name,
@@ -83,7 +107,19 @@ export function QuickEntryPage() {
       }
 
       toast.success('تم تسجيل الزيارة بنجاح');
-      navigate('/');
+
+      if (planTaskId && planDateParam) {
+        const plan = await getPlanByDate(planDateParam);
+        if (plan) {
+          const updatedTasks = plan.tasks.map(t => 
+            t.id === planTaskId ? { ...t, status: 'completed' as const, visitId: newVisit.id } : t
+          );
+          await updatePlan(plan.id, { tasks: updatedTasks });
+        }
+        navigate(`/planning/build?date=${planDateParam}`);
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       toast.error('فشل حفظ الزيارة');
       console.error(error);
