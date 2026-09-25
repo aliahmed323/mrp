@@ -180,15 +180,15 @@ export function DoctorDetailPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <ShareLocationButton location={doctor.location} label={doctor.name} address={doctor.area} size="lg" fullWidth />
+              <ShareLocationButton location={doctor.location} label={doctor.name} address={doctor.area} />
               <Button 
                 variant="secondary" 
-                size="lg" 
+                size="sm" 
                 className="shrink-0 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 px-4"
-                onClick={() => window.open(`waze://ul?ll=${doctor.location!.latitude},${doctor.location!.longitude}&navigate=yes`, '_blank')}
+                onClick={() => window.open(`https://waze.com/ul?ll=${doctor.location!.latitude},${doctor.location!.longitude}&navigate=yes`, '_blank')}
                 title="فتح في Waze"
               >
-                🚗 Waze
+                🚗 مسار Waze
               </Button>
             </div>
           </div>

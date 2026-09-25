@@ -21,9 +21,9 @@ export function ShareLocationButton({
   location,
   label,
   address,
-  size = 'md',
+  size = 'sm',
   fullWidth = false,
-  className,
+  className = '',
 }: ShareLocationButtonProps) {
   const [status, setStatus] = useState<'idle' | 'sharing' | 'shared' | 'copied' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -72,7 +72,7 @@ export function ShareLocationButton({
 
   const variant = status === 'error' ? 'danger' as const
     : status === 'shared' || status === 'copied' ? 'success' as const
-    : 'primary' as const;
+    : 'secondary' as const;
 
   return (
     <Button

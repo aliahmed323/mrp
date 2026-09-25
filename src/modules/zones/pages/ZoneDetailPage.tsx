@@ -8,12 +8,14 @@ import type { Doctor } from '@/modules/doctors/models/doctor.model';
 import type { Pharmacy } from '@/modules/pharmacies/models/pharmacy.model';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/States';
+import { useZoneStore } from '../hooks/useZoneStore';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { AddEntityToZoneModal } from '../components/AddEntityToZoneModal';
 
 export function ZoneDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { archiveZone, unarchiveZone } = useZoneStore();
 
   const [zone, setZone] = useState<Zone | null>(null);
   const [compounds, setCompounds] = useState<Compound[]>([]);
@@ -21,6 +23,7 @@ export function ZoneDetailPage() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const [tab, setTab] = useState<'compounds' | 'doctors' | 'pharmacies'>('compounds');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalType, setAddModalType] = useState<'compound' | 'doctor' | 'pharmacy'>('compound');
@@ -48,6 +51,12 @@ export function ZoneDetailPage() {
   if (loading) return <LoadingState message="جارٍ تحميل المنطقة..." />;
   if (!zone) return <div className="text-center py-12 text-slate-500">المنطقة غير موجودة</div>;
 
+  const handleArchive = async () => {
+    if (zone.archived) await unarchiveZone(zone.id);
+    else await archiveZone(zone.id);
+    navigate('/zones', { replace: true });
+  };
+
   const handleDelete = async () => {
     await deleteZone(zone.id);
     navigate('/zones', { replace: true });
@@ -67,6 +76,9 @@ export function ZoneDetailPage() {
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => navigate(`/zones/${zone.id}/edit`)}>
               <Edit2 size={14} /> تعديل
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmArchive(true)}>
+              {zone.archived ? 'استعادة' : 'أرشفة'}
             </Button>
           </div>
         </div>
@@ -235,6 +247,15 @@ export function ZoneDetailPage() {
         </div>
       </div>
 
+      <ConfirmDialog
+        open={confirmArchive}
+        onClose={() => setConfirmArchive(false)}
+        onConfirm={handleArchive}
+        title={zone.archived ? 'استعادة المنطقة' : 'أرشفة المنطقة'}
+        message={zone.archived ? `هل أنت متأكد من استعادة منطقة "${zone.name}"؟` : `هل أنت متأكد من أرشفة منطقة "${zone.name}"؟`}
+        confirmLabel={zone.archived ? 'استعادة' : 'أرشفة'}
+        variant="warning"
+      />
       <ConfirmDialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}

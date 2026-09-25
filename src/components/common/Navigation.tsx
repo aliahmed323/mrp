@@ -14,18 +14,18 @@ import { cn } from '@/utils/cn';
 const MAIN_NAV_ITEMS = [
   { path: '/', label: 'الرئيسية', icon: LayoutDashboard },
   { path: '/quick-entry', label: 'إضافة سريعة', icon: PlusCircle, isAction: true },
-  { path: '/products', label: 'المنتجات', icon: Package },
-  { path: '/doctors', label: 'الأطباء', icon: Stethoscope },
+  { path: '/planning', label: 'التخطيط', icon: NavIcon },
+  { path: '/visits', label: 'الزيارات', icon: CalendarDays },
+  { path: '/reports', label: 'التقارير', icon: FileText },
 ];
 
 const MORE_NAV_ITEMS = [
-  { path: '/zones', label: 'المناطق', icon: MapPin, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-  { path: '/planning', label: 'التخطيط', icon: NavIcon, color: 'text-violet-600', bg: 'bg-violet-50' },
+  { path: '/doctors', label: 'الأطباء', icon: Stethoscope, color: 'text-blue-600', bg: 'bg-blue-50' },
   { path: '/pharmacies', label: 'الصيدليات', icon: Pill, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { path: '/products', label: 'المنتجات', icon: Package, color: 'text-rose-600', bg: 'bg-rose-50' },
   { path: '/compounds', label: 'المجمعات', icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { path: '/visits', label: 'الزيارات', icon: CalendarDays, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { path: '/zones', label: 'المناطق', icon: MapPin, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   { path: '/orders', label: 'الطلبيات', icon: ShoppingBag, color: 'text-orange-600', bg: 'bg-orange-50' },
-  { path: '/reports', label: 'التقارير', icon: FileText, color: 'text-rose-600', bg: 'bg-rose-50' },
 ];
 
 // Fallback for missing icon in import

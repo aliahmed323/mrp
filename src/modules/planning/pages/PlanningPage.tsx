@@ -50,21 +50,38 @@ export function PlanningPage() {
     loadData();
   };
 
-  const generatePlanText = () => {
-    const todayList = pendingVisits.filter(v => v.followUpDate === todayStr);
-    let text = `خطة اليوم / خطة العمل\nالاسم: علي أحمد\nالتاريخ: ${todayStr}\n\n`;
+  const [planDate, setPlanDate] = useState(todayStr);
+
+  const generatePlanTextForDate = (date: string) => {
+    const list = pendingVisits.filter(v => v.followUpDate === date);
+    let text = `خطة العمل\nالاسم: علي أحمد\nالتاريخ: ${date}\n\n`;
     
-    if (todayList.length === 0) {
-      text += 'لا توجد مهام مجدولة لليوم.\n';
+    if (list.length === 0) {
+      text += 'لا توجد مهام مجدولة لهذا اليوم.\n';
     } else {
-      todayList.forEach((v, index) => {
+      list.forEach((v, index) => {
         text += `${index + 1}. ${v.entityName}`;
         if (v.followUpNotes) text += ` - ${v.followUpNotes}`;
         text += '\n';
       });
     }
     setPlanText(text);
+  };
+
+  const handleOpenShareModal = () => {
+    setPlanDate(todayStr);
+    generatePlanTextForDate(todayStr);
     setShareModalOpen(true);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    setPlanDate(newDate);
+    generatePlanTextForDate(newDate);
+  };
+
+  const handleAddManualTask = () => {
+    setPlanText(prev => prev + '\n- مهمة جديدة: ');
   };
 
   const handleSharePlan = async () => {
@@ -133,8 +150,8 @@ export function PlanningPage() {
             <p className="text-sm text-slate-500">نظّم متابعاتك وزياراتك القادمة</p>
           </div>
         </div>
-        <Button onClick={generatePlanText} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-          <Share2 size={16} /> مشاركة الخطة
+        <Button onClick={handleOpenShareModal} size="sm" variant="secondary" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3">
+          <Share2 size={14} /> بناء خطة
         </Button>
       </div>
 
@@ -277,13 +294,29 @@ export function PlanningPage() {
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
-              <h2 className="font-bold text-slate-800">مشاركة الخطة</h2>
+              <h2 className="font-bold text-slate-800">إعداد ومشاركة الخطة</h2>
               <button onClick={() => setShareModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500">
                 <X size={20} />
               </button>
             </div>
             
-            <div className="p-4 flex-1 overflow-y-auto">
+            <div className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ الخطة</label>
+                  <input 
+                    type="date"
+                    value={planDate}
+                    onChange={handleDateChange}
+                    className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:border-indigo-500 outline-none"
+                  />
+                </div>
+                <div className="flex-1 flex items-end">
+                  <Button size="sm" variant="secondary" onClick={handleAddManualTask} className="w-full">
+                    + إضافة مهمة أخرى
+                  </Button>
+                </div>
+              </div>
               <textarea
                 className="w-full h-full min-h-[300px] p-4 text-sm leading-relaxed bg-white rounded-xl border border-slate-200 outline-none resize-none text-slate-800 focus:border-indigo-500"
                 style={{ direction: 'rtl', textAlign: 'right' }}
