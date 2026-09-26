@@ -22,6 +22,8 @@ export function AddTaskModal({ isOpen, onClose, onAdd }: AddTaskModalProps) {
   const [action, setAction] = useState<'product_pitch' | 'product_follow_up' | 'all_products' | 'general'>('general');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
+  const [quickNote, setQuickNote] = useState('');
+  const [reminder, setReminder] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +52,8 @@ export function AddTaskModal({ isOpen, onClose, onAdd }: AddTaskModalProps) {
       action,
       productNames,
       notes,
+      quickNote,
+      reminder,
       status: 'pending'
     });
     
@@ -121,6 +125,33 @@ export function AddTaskModal({ isOpen, onClose, onAdd }: AddTaskModalProps) {
                   <p className="text-sm font-bold text-slate-900">{selectedEntity.name}</p>
                 </div>
                 <button onClick={() => setSelectedEntity(null)} className="text-xs text-blue-600 bg-white px-2 py-1 rounded-md shadow-sm">تغيير</button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">ملاحظة سريعة</label>
+                  <input
+                    type="text"
+                    placeholder="ملاحظة قصيرة..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    value={quickNote}
+                    onChange={e => setQuickNote(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">تنبيه (تذكير)</label>
+                  <select
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    value={reminder || ''}
+                    onChange={e => setReminder(e.target.value ? Number(e.target.value) : undefined)}
+                  >
+                    <option value="">بدون تنبيه</option>
+                    <option value="30">بعد 30 دقيقة</option>
+                    <option value="60">بعد 1 ساعة</option>
+                    <option value="90">بعد ساعة ونصف</option>
+                    <option value="120">بعد ساعتين</option>
+                  </select>
+                </div>
               </div>
 
               <div>

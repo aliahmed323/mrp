@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Building, User } from 'lucide-react';
+import { ArrowLeft, Save, Building, User, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/FormControls';
 import { usePointCenterStore } from '../hooks/usePointCenterStore';
@@ -8,15 +8,17 @@ import { useDoctorStore } from '@/modules/doctors/hooks/useDoctorStore';
 import { usePharmacyStore } from '@/modules/pharmacies/hooks/usePharmacyStore';
 import toast from 'react-hot-toast';
 import type { PointCenterFormData } from '../models/pointCenter.model';
+import { ConfirmDialog } from '@/components/ui/Dialog';
 
 export function PointCenterFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { pointCenters, addPointCenter, updatePointCenter } = usePointCenterStore();
+  const { pointCenters, addPointCenter, updatePointCenter, deletePointCenter } = usePointCenterStore();
   const { doctors, loadDoctors } = useDoctorStore();
   const { pharmacies, loadPharmacies } = usePharmacyStore();
 
   const isEditing = Boolean(id);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [formData, setFormData] = useState<PointCenterFormData>({
     name: '',
@@ -77,7 +79,7 @@ export function PointCenterFormPage() {
         </button>
         <div>
           <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'تعديل Point Center' : 'إضافة Point Center'}</h2>
-          <p className="text-sm text-slate-500">{isEditing ? 'تعديل البيانات الحالية' : 'إضافة مركز استهلاك جديد'}</p>
+          <p className="text-sm text-slate-500">{isEditing ? 'تعديل البيانات الحالية' : 'إضافة مركز جديد'}</p>
         </div>
       </div>
 
@@ -91,7 +93,7 @@ export function PointCenterFormPage() {
         />
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-700">المركز تابع لـ</label>
+          <label className="text-sm font-semibold text-slate-700">ملاحظات</label>
           <div className="flex gap-2">
             <button
               type="button"
@@ -116,7 +118,7 @@ export function PointCenterFormPage() {
 
         {formData.type === 'doctor' && (
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">اختر الطبيب</label>
+            <label className="text-sm font-semibold text-slate-700">ملاحظات</label>
             <select
               value={formData.doctorId}
               onChange={e => setFormData({ ...formData, doctorId: e.target.value })}
@@ -132,7 +134,7 @@ export function PointCenterFormPage() {
 
         {formData.type === 'pharmacy' && (
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">اختر الصيدلية</label>
+            <label className="text-sm font-semibold text-slate-700">ملاحظات</label>
             <select
               value={formData.pharmacyId}
               onChange={e => setFormData({ ...formData, pharmacyId: e.target.value })}
@@ -148,8 +150,8 @@ export function PointCenterFormPage() {
 
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
           <div>
-            <p className="font-semibold text-sm text-slate-900">حالة التنزيل</p>
-            <p className="text-xs text-slate-500">هل التنزيل في هذا المركز مستمر أم متوقف؟</p>
+            <p className="font-semibold text-sm text-slate-900">حالة المركز</p>
+            <p className="text-xs text-slate-500">هل المركز نشط ويستقبل الطلبيات بشكل مستمر؟</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -168,15 +170,35 @@ export function PointCenterFormPage() {
             value={formData.notes}
             onChange={e => setFormData({ ...formData, notes: e.target.value })}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 min-h-[100px]"
-            placeholder="ملاحظات حول الـ Point Center..."
+            placeholder="ملاحظات حول هذا المركز..."
           />
         </div>
 
-        <Button type="submit" fullWidth className="bg-[#0F52BA] hover:bg-blue-700 h-12 text-lg">
-          <Save size={20} />
-          {isEditing ? 'حفظ التعديلات' : 'إضافة'}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" fullWidth className="bg-[#0F52BA] hover:bg-blue-700 h-12 text-lg">
+            <Save size={20} className="mr-2" />
+            {isEditing ? 'حفظ التعديلات' : 'إضافة'}
+          </Button>
+          {isEditing && (
+            <Button type="button" variant="danger" onClick={() => setConfirmDelete(true)} className="h-12 px-6 shrink-0">
+              <Trash2 size={20} />
+            </Button>
+          )}
+        </div>
       </form>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={async () => {
+          if (id) await deletePointCenter(id);
+          navigate('/point-centers');
+        }}
+        title="حذف المركز"
+        message="هل أنت متأكد من حذف هذا المركز نهائياً؟"
+        confirmLabel="حذف نهائياً"
+        variant="danger"
+      />
     </div>
   );
 }

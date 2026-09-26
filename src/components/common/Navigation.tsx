@@ -3,7 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Pill, Stethoscope, 
   PlusCircle, FileText, ShoppingBag, Settings,
-  MoreHorizontal, CalendarDays, Navigation as NavIcon, Building2, MapPin, Activity
+  MoreHorizontal, CalendarDays, Navigation as NavIcon, Building2, MapPin, Activity,
+  Users
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -27,6 +28,7 @@ const MORE_NAV_ITEMS = [
   { path: '/compounds', label: 'المجمعات', icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50' },
   { path: '/zones', label: 'المناطق', icon: MapPin, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   { path: '/orders', label: 'الطلبيات', icon: ShoppingBag, color: 'text-orange-600', bg: 'bg-orange-50' },
+  { path: '/contacts', label: 'جهات الاتصال', icon: Users, color: 'text-teal-600', bg: 'bg-teal-50' },
 ];
 
 // Fallback for missing icon in import

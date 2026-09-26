@@ -42,6 +42,19 @@ export function AddEntityToZoneModal({ open, onClose, zoneId, entityType, onAdde
     onClose();
   };
 
+  const handleAddAll = async () => {
+    if (filtered.length === 0) return;
+    setLoading(true);
+    for (const item of filtered) {
+      if (entityType === 'compound') await db.compounds.update(item.id, { zoneId });
+      if (entityType === 'doctor') await db.doctors.update(item.id, { zoneId });
+      if (entityType === 'pharmacy') await db.pharmacies.update(item.id, { zoneId });
+    }
+    setLoading(false);
+    onAdded();
+    onClose();
+  };
+
   if (!open) return null;
 
   return (
@@ -56,7 +69,7 @@ export function AddEntityToZoneModal({ open, onClose, zoneId, entityType, onAdde
           </button>
         </div>
         
-        <div className="p-4 border-b border-slate-100">
+        <div className="p-4 border-b border-slate-100 flex flex-col gap-3">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
@@ -67,6 +80,11 @@ export function AddEntityToZoneModal({ open, onClose, zoneId, entityType, onAdde
               onChange={e => setSearch(e.target.value)}
             />
           </div>
+          {filtered.length > 0 && (
+            <Button size="sm" variant="secondary" onClick={handleAddAll} disabled={loading} fullWidth className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-transparent">
+              إضافة الكل ({filtered.length})
+            </Button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-2">

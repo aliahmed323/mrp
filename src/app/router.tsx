@@ -28,6 +28,9 @@ import { VisitDetailPage } from '@/modules/visits/pages/VisitDetailPage';
 
 // Orders
 import { OrderListPage } from '@/modules/orders/pages/OrderListPage';
+
+// Contacts
+import { ContactsPage } from '@/modules/contacts/pages/ContactsPage';
 import { OrderDetailPage } from '@/modules/orders/pages/OrderDetailPage';
 import { AddOrderPage } from '@/modules/orders/pages/AddOrderPage';
 import { EditOrderPage } from '@/modules/orders/pages/EditOrderPage';
@@ -124,6 +127,7 @@ export const router = createHashRouter([
       
       // Other
       { path: 'reports', element: <ReportsPage /> },
+      { path: 'contacts', element: <ContactsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       
       // Catch-all

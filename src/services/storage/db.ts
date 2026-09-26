@@ -25,7 +25,8 @@ class MedRepDatabase extends Dexie {
   compounds!: Table<Compound>;
   zones!: Table<Zone>;
   plans!: Table<DailyPlan>;
-  pointCenters!: Table<any>; // Will do next
+  pointCenters!: Table<any>;
+  contacts!: Table<any>; // Will do next
 
   constructor() {
     super('MedRepDB');
@@ -307,6 +308,12 @@ class MedRepDatabase extends Dexie {
         if (!order.pointCenterId) order.pointCenterId = '';
         if (order.quantity === undefined) order.quantity = 0;
       });
+    });
+
+    this.version(8).stores({
+      contacts: [
+        'id', 'name', 'phone', 'type', 'category', 'createdAt',
+      ].join(', '),
     });
   }
 }

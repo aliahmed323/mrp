@@ -32,6 +32,7 @@ const schema = z.object({
   phone: z.string().default(''),
   notes: z.string().default(''),
   active: z.boolean().default(true),
+  class: z.enum(['A+', 'A', 'B+', 'B', 'C+', 'C']).optional(),
   attitude: z.enum(['excellent', 'good', 'average', 'poor']).default('good'),
   relationshipType: z.enum(['Dealer', 'Dirty Dealer', 'Scientific']).default('Scientific'),
   zoneId: z.string().default(''),
@@ -105,6 +106,7 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
     phone: initialData?.phone ?? '',
     notes: initialData?.notes ?? '',
     active: initialData?.active ?? true,
+    class: initialData?.class ?? undefined,
     attitude: (initialData?.attitude as DoctorAttitude) ?? 'good',
     relationshipType: initialData?.relationshipType ?? 'Scientific',
     zoneId: initialData?.zoneId ?? '',
@@ -134,6 +136,7 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
         notes: values.notes ?? '',
         location: locationValue,
         active: values.active,
+        class: values.class,
         attitude: values.attitude,
         relationshipType: values.relationshipType,
         zoneId: values.zoneId ?? '',
@@ -254,6 +257,27 @@ export function DoctorForm({ initialData, onSubmit, onCancel, submitLabel = 'ح�
 
       {/* 3. Doctor Rating */}
       <Section title="⭐ تصنيف الطبيب">
+        <FullWidth>
+          <Controller
+            name="class"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Class (تصنيف الأهمية)"
+                options={[
+                  { value: '', label: '-- اختر --' },
+                  { value: 'A+', label: 'A+' },
+                  { value: 'A', label: 'A' },
+                  { value: 'B+', label: 'B+' },
+                  { value: 'B', label: 'B' },
+                  { value: 'C+', label: 'C+' },
+                  { value: 'C', label: 'C' },
+                ]}
+                {...field}
+              />
+            )}
+          />
+        </FullWidth>
         <Controller
           name="attitude"
           control={control}

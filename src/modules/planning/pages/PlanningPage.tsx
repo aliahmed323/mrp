@@ -152,18 +152,18 @@ export function PlanningPage() {
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-8 h-[calc(100vh-80px)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 shrink-0 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-            <Navigation size={24} className="fill-current" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 shrink-0">
+            <Navigation size={20} className="fill-current sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">قائمة المهام والتخطيط</h2>
-            <p className="text-sm text-slate-500">نظّم متابعاتك وزياراتك القادمة</p>
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-xl font-bold text-slate-900 truncate">قائمة المهام والتخطيط</h2>
+            <p className="text-xs sm:text-sm text-slate-500 truncate">نظّم متابعاتك وزياراتك القادمة</p>
           </div>
         </div>
-        <Button onClick={() => navigate(`/planning/build?date=${todayStr}`)} size="sm" variant="secondary" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3">
-          <Calendar size={14} /> بناء خطة
+        <Button onClick={() => navigate(`/planning/build?date=${todayStr}`)} size="sm" variant="secondary" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 shrink-0 ml-auto">
+          <Calendar size={14} className="mr-1" /> بناء خطة
         </Button>
       </div>
 

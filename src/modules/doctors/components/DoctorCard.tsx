@@ -72,9 +72,16 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
 
             {/* Identity */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-900 text-sm leading-tight truncate">
-                {doctor.name}
-              </h3>
+              <div className="flex items-center gap-1.5 leading-tight truncate">
+                <h3 className="font-bold text-slate-900 text-sm truncate">
+                  {doctor.name}
+                </h3>
+                {doctor.class && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-900 text-white shadow-sm shrink-0">
+                    {doctor.class}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {doctor.specialties && doctor.specialties.length > 0 && (
                   <span className="text-xs bg-slate-100 text-slate-700 rounded-md px-1.5 py-0.5">

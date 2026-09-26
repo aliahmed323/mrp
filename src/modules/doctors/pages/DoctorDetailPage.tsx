@@ -115,7 +115,14 @@ export function DoctorDetailPage() {
               🩺
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <h1 className="text-xl font-bold text-slate-900 leading-tight">{doctor.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-900 leading-tight">{doctor.name}</h1>
+                {doctor.class && (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-900 text-white shadow-sm">
+                    {doctor.class}
+                  </span>
+                )}
+              </div>
               {/* Specialties */}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {(doctor.specialties || []).map(s => (

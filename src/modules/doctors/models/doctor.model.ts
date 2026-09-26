@@ -71,6 +71,7 @@ export interface Doctor {
   updatedAt: string;
 
   // ── حقول جديدة ──────────────────────────────────────────────
+  class?: 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C'; // Class
   attitude: DoctorAttitude;       // تقييم التعامل
   relationshipType: 'Dealer' | 'Dirty Dealer' | 'Scientific'; // تصنيف العلاقة
   zoneId: string;                 // المنطقة الجغرافية
